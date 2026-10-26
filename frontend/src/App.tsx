@@ -209,7 +209,7 @@ export default function App() {
             ) : (
               <Welcome mode={mode} busy={busy} />
             ))}
-          {tab === "research" && <ResearchPanel titles={form.titles} locations={form.locations} days={form.days} onImport={() => setTab("import")} />}
+          {tab === "research" && <ResearchPanel titles={form.titles} skills={form.skills} locations={form.locations} days={form.days} onImport={() => setTab("import")} />}
           {tab === "import" && (
             <div className="space-y-3">
               {mode === "demo" && (
