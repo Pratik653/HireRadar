@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_FORM, isFieldReset, isFormDefault, resetField, sanitizeForm } from "./form";
-import { buildResearchLinks } from "./linkedin";
+import { placeNames } from "./linkedin";
 import {
   ancestorsOf,
   clearWithin,
@@ -147,10 +147,8 @@ describe("request serialisation", () => {
     ]);
   });
 
-  it("uses region and state names in research links, and none for worldwide", () => {
-    const links = buildResearchLinks(["LLM Engineer"], [{ region: "europe" }, karnataka], 7);
-    expect(new URL(links[0].url).searchParams.get("keywords")).toBe('hiring "LLM Engineer" ("Europe" OR "Karnataka")');
-    const world = buildResearchLinks(["LLM Engineer"], [{ region: "world" }], 7);
-    expect(new URL(world[0].url).searchParams.get("keywords")).toBe('hiring "LLM Engineer"');
+  it("turns selections into research place names, none for worldwide", () => {
+    expect(placeNames([{ region: "europe" }, karnataka, bengaluru])).toEqual(["Europe", "Karnataka", "Bengaluru"]);
+    expect(placeNames([{ region: "world" }])).toEqual([]);
   });
 });
