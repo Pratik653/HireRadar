@@ -1,0 +1,8 @@
+HireRadar
+Copyright 2026 Pratik653 and HireRadar contributors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+HireRadar contains no source code from pritamdharme/linkedin-hiring-post, which
+was reviewed as a design reference. That repository carries no license, so its
+code was not copied or adapted. See docs/REFERENCE_AUDIT.md.

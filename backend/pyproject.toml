@@ -1,0 +1,23 @@
+[project]
+name = "hireradar-backend"
+version = "0.1.0"
+description = "HireRadar API: hiring-opportunity discovery, explainable scoring and Excel export"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+
+[tool.pytest.ini_options]
+testpaths = ["../tests/backend"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S101", "S324"]
+
+[tool.ruff.lint.per-file-ignores]
+"../tests/**" = ["S"]
