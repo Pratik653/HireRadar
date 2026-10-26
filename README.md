@@ -28,7 +28,7 @@ and exports the result to a formatted Excel workbook with an application tracker
 | **Matching** | Title normalisation (`Sr. ML Eng` → `senior machine learning engineer`), role families so "AI Engineer" doesn't match "AI Sales Executive", skill synonyms (RAG = retrieval-augmented generation), TF-IDF similarity |
 | **Honest dates** | A date is shown only when the source provides one. Each is labelled *exact*, *reported* (Lever creation time or a date you entered) or *unknown*. Undated items are never given a date |
 | **Deduplication** | Same URL, same company + title + city, or same company with near-identical text |
-| **LinkedIn research mode** | Builds LinkedIn post searches and web searches for your roles, places and window. You open them in your own browser |
+| **LinkedIn research mode** | Plans 30–60 distinct LinkedIn post searches across ten kinds of hiring post (recruiter, hiring manager, referral, urgent, startup, team expansion, related titles and technologies …), one place per query, plus Google/Bing searches for indexed posts. Filter by category or text and step through them with *Open next search*. You open each one in your own browser; nothing is run automatically |
 | **Import** | Paste a post, or upload CSV/JSON. Imports stay in your browser |
 | **Export** | XLSX with *Hiring Leads*, *Search Summary* and *Application Tracker* sheets (frozen, filtered headers, validated links, formula-injection protection), plus CSV |
 
