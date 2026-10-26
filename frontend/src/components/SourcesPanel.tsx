@@ -29,7 +29,7 @@ const SOURCES = [
 const WEIGHTS = [
   ["Role & skills", "40%", "Title-word overlap, share of your skills found (with synonyms such as RAG ↔ retrieval-augmented generation), TF-IDF similarity to your titles, skills, description and resume."],
   ["Hiring intent", "30%", "Rule-based class: explicit vacancy, hiring-manager post, recruiter post, general recruitment, weak signal. Job-seeker and 'I joined' posts are removed."],
-  ["Geography", "20%", "Selected city or country 1.0, same country other city 0.6, remote 0.5–0.9 by stated eligibility, unstated 0.3."],
+  ["Geography", "20%", "Inside a selected region, country, state or city 1.0; same state, other city 0.7; same country, other city or state 0.6; remote roles 0.5–1.0 by stated eligibility (roles limited to other regions are removed); unstated 0.3. Several selections are combined with OR."],
   ["Recency", "10%", "Linear from 1.0 (just posted) to 0 at the end of your window. Items without a trustworthy date score 0 and are never given a date."],
 ];
 
@@ -51,6 +51,12 @@ export function SourcesPanel() {
         </div>
         <p className="mt-2 text-xs text-slate-500">
           When a source fails, the results say so. HireRadar never substitutes demo data for a failed live source.
+        </p>
+        <p className="mt-2 text-xs text-slate-500">
+          <strong className="font-medium text-slate-600">Location filters versus live coverage.</strong> You can target
+          216 countries and their main hubs (ISO 3166 codes), but live listings exist only where the selected sources
+          publish them: the company boards you add, Remotive's remote roles and your imports. A worldwide search
+          therefore covers every location the sources report, not every job market.
         </p>
       </section>
       <section>

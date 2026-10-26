@@ -115,7 +115,7 @@ export function Results({ response, tracking, setStatus, onExportXlsx, onExportC
     const sources = new Set<string>();
     const intents = new Set<string>();
     response.results.forEach((r) => {
-      locs.add(r.city ?? r.country ?? (r.work_mode === "remote" ? "Remote" : "Unspecified"));
+      locs.add(r.country ?? (r.work_mode === "remote" ? "Remote" : "Unspecified"));
       sources.add(r.source_label);
       intents.add(r.intent);
     });
@@ -125,7 +125,7 @@ export function Results({ response, tracking, setStatus, onExportXlsx, onExportC
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     const filtered = response.results.filter((r) => {
-      const loc = r.city ?? r.country ?? (r.work_mode === "remote" ? "Remote" : "Unspecified");
+      const loc = r.country ?? (r.work_mode === "remote" ? "Remote" : "Unspecified");
       if (location && loc !== location) return false;
       if (intent && r.intent !== intent) return false;
       if (source && r.source_label !== source) return false;
@@ -139,6 +139,7 @@ export function Results({ response, tracking, setStatus, onExportXlsx, onExportC
   }, [response, query, location, intent, source, sort]);
 
   const s = response.summary;
+  const failed = response.sources.filter((src) => src.status === "error");
   const removed = [
     [s.removed_duplicates, "duplicates"],
     [s.removed_unrelated, "not hiring"],
@@ -191,8 +192,8 @@ export function Results({ response, tracking, setStatus, onExportXlsx, onExportC
           className="w-full min-w-0 rounded-md border border-slate-300 px-3 py-1.5 text-sm sm:w-auto sm:min-w-[12rem] sm:flex-1"
         />
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
-          <select aria-label="Filter by location" value={location} onChange={(e) => setLocation(e.target.value)} className={select}>
-            <option value="">All locations</option>
+          <select aria-label="Filter by country" value={location} onChange={(e) => setLocation(e.target.value)} className={select}>
+            <option value="">All countries</option>
             {options.locs.map((l) => <option key={l}>{l}</option>)}
           </select>
           <select aria-label="Filter by intent" value={intent} onChange={(e) => setIntent(e.target.value)} className={select}>
@@ -240,10 +241,26 @@ export function Results({ response, tracking, setStatus, onExportXlsx, onExportC
       {rows.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
           <SearchX className="text-slate-400" size={32} />
-          <p className="font-medium text-slate-700">No opportunities match.</p>
-          <p className="max-w-md text-sm text-slate-500">
-            Try a wider publication window, more locations or skills, fewer exclusions — or clear the result filters above.
-          </p>
+          {response.results.length > 0 ? (
+            <>
+              <p className="font-medium text-slate-700">No results match the filters above.</p>
+              <p className="max-w-md text-sm text-slate-500">Clear the search box or set the filters back to “All”.</p>
+            </>
+          ) : failed.length > 0 && failed.length === response.sources.filter((src) => src.status !== "skipped").length ? (
+            <>
+              <p className="font-medium text-slate-700">The selected sources could not be reached.</p>
+              <p className="max-w-md text-sm text-slate-500">{failed.map((src) => `${src.label}: ${src.message}`).join(" · ")}</p>
+            </>
+          ) : (
+            <>
+              <p className="font-medium text-slate-700">No opportunities found.</p>
+              <p className="max-w-md text-sm text-slate-500">
+                Try a wider publication window, more locations or skills, or fewer exclusions.
+                {response.mode === "live" &&
+                  " Location filters cover the whole world, but live listings come only from the company boards you add, Remotive (remote roles) and your imports, so many places have no live coverage yet."}
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -294,7 +311,7 @@ export function Results({ response, tracking, setStatus, onExportXlsx, onExportC
                         )}
                       </td>
                       <td className="text-sm md:px-3 md:py-3">
-                        <p className="text-slate-800">{[r.city, r.country].filter(Boolean).join(", ") || r.location_raw || "Location not stated"}</p>
+                        <p className="text-slate-800">{[...new Set([r.city, r.subdivision, r.country].filter(Boolean))].join(", ") || r.location_raw || "Location not stated"}</p>
                         <p className="text-xs text-slate-500">
                           {r.work_mode && `${r.work_mode} · `}
                           <span title={r.published_at ?? undefined}>{age(r.published_at)}</span>

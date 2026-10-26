@@ -13,8 +13,12 @@ export type Intent =
   | "weak_signal"
   | "unrelated";
 
+/** A region (continent, group or "world"), a whole country (ISO 3166-1), an
+ *  ISO 3166-2 subdivision, or a city within a country or subdivision. */
 export interface LocationSelection {
-  country_code: string;
+  region?: string | null;
+  country_code?: string | null;
+  subdivision?: string | null;
   city?: string | null;
 }
 
@@ -65,6 +69,7 @@ export interface Opportunity {
   title: string;
   company?: string | null;
   country?: string | null;
+  subdivision?: string | null;
   city?: string | null;
   location_raw?: string | null;
   work_mode?: WorkMode | null;

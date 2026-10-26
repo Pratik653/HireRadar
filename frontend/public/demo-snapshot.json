@@ -1,19 +1,25 @@
 {
  "mode": "demo",
- "generated_at": "2026-10-26T09:57:43.382733Z",
+ "generated_at": "2026-10-26T11:29:39.434880Z",
  "request": {
   "mode": "demo",
   "locations": [
    {
+    "region": null,
     "country_code": "AE",
+    "subdivision": null,
     "city": null
    },
    {
+    "region": null,
     "country_code": "SA",
+    "subdivision": null,
     "city": "Riyadh"
    },
    {
+    "region": null,
     "country_code": "QA",
+    "subdivision": null,
     "city": null
    }
   ],
@@ -55,11 +61,12 @@
    "title": "Senior Applied AI Engineer",
    "company": "Falconridge Digital",
    "country": "United Arab Emirates",
+   "subdivision": null,
    "city": "Dubai",
    "location_raw": "Dubai, UAE (hybrid)",
    "work_mode": "hybrid",
    "seniority": "senior",
-   "published_at": "2026-10-26T04:57:43.382905Z",
+   "published_at": "2026-10-26T06:29:39.435054Z",
    "date_confidence": "exact",
    "intent": "hiring_manager",
    "intent_label": "Direct hiring-manager announcement",
@@ -75,7 +82,7 @@
     "Skills: 5/5 matched (python, rag, langgraph, agentic ai, llm)",
     "Text similarity to your target profile: 67%",
     "Intent: Direct hiring-manager announcement — first-person hiring phrase \"My team is hiring\"",
-    "Location: Dubai is in United Arab Emirates, which you selected",
+    "Location: Dubai, United Arab Emirates is in United Arab Emirates, which you selected",
     "Recency: published 4 hours ago (window 7d)"
    ],
    "matched_skills": [
@@ -103,11 +110,12 @@
    "title": "LLM Engineer",
    "company": "Saffron Grid",
    "country": "United Arab Emirates",
+   "subdivision": null,
    "city": "Abu Dhabi",
    "location_raw": "Abu Dhabi, United Arab Emirates",
    "work_mode": "onsite",
    "seniority": null,
-   "published_at": "2026-10-25T03:57:43.382905Z",
+   "published_at": "2026-10-25T05:29:39.435054Z",
    "date_confidence": "exact",
    "intent": "explicit_vacancy",
    "intent_label": "Explicit vacancy",
@@ -123,7 +131,7 @@
     "Skills: 3/5 matched (python, rag, llm)",
     "Text similarity to your target profile: 77%",
     "Intent: Explicit vacancy — published as a job listing by the source",
-    "Location: Abu Dhabi is in United Arab Emirates, which you selected",
+    "Location: Abu Dhabi, United Arab Emirates is in United Arab Emirates, which you selected",
     "Recency: published 29 hours ago (window 7d)"
    ],
    "matched_skills": [
@@ -144,11 +152,12 @@
    "title": "Agentic AI Engineer — remote within GCC",
    "company": "Harbor & Dune Bank",
    "country": null,
+   "subdivision": null,
    "city": null,
    "location_raw": "Remote (GCC)",
    "work_mode": "remote",
    "seniority": null,
-   "published_at": "2026-10-24T17:57:43.382905Z",
+   "published_at": "2026-10-24T19:29:39.435054Z",
    "date_confidence": "exact",
    "intent": "hiring_manager",
    "intent_label": "Direct hiring-manager announcement",
@@ -164,7 +173,7 @@
     "Skills: 4/5 matched (python, langgraph, agentic ai, llm)",
     "Text similarity to your target profile: 53%",
     "Intent: Direct hiring-manager announcement — first-person hiring phrase \"Our team is hiring\"",
-    "Location: remote role open to the GCC region",
+    "Location: remote role open to a region that includes your selection",
     "Recency: published 39 hours ago (window 7d)"
    ],
    "matched_skills": [
@@ -191,6 +200,7 @@
    "title": "LLM Engineer (date not shown)",
    "company": "Qamar Mobility",
    "country": "Saudi Arabia",
+   "subdivision": null,
    "city": "Jeddah",
    "location_raw": "Jeddah, Saudi Arabia",
    "work_mode": null,
@@ -211,7 +221,7 @@
     "Skills: 3/5 matched (python, rag, llm)",
     "Text similarity to your target profile: 80%",
     "Intent: Explicit vacancy — hiring phrase \"We're looking for\" with vacancy detail \"Full-time\"",
-    "Location: Jeddah, Saudi Arabia: same country, different city",
+    "Location: Jeddah, Saudi Arabia: same country as Riyadh, different or unstated city",
     "Recency: publication date unknown; not counted toward recency"
    ],
    "matched_skills": [
@@ -232,11 +242,12 @@
    "title": "Python Developer (FastAPI) — client in Riyadh",
    "company": "Confidential (via recruiter)",
    "country": "Saudi Arabia",
+   "subdivision": null,
    "city": "Riyadh",
    "location_raw": "Riyadh, Saudi Arabia",
    "work_mode": null,
    "seniority": null,
-   "published_at": "2026-10-24T07:57:43.382905Z",
+   "published_at": "2026-10-24T09:29:39.435054Z",
    "date_confidence": "exact",
    "intent": "recruiter",
    "intent_label": "Recruiter hiring announcement",
@@ -252,7 +263,7 @@
     "Skills: 1/5 matched (python)",
     "Text similarity to your target profile: 28%",
     "Intent: Recruiter hiring announcement — recruiter signal: I'm recruiting",
-    "Location: Riyadh matches your selection",
+    "Location: Riyadh, Saudi Arabia matches your selection",
     "Recency: published 2 days ago (window 7d)"
    ],
    "matched_skills": [
@@ -276,11 +287,12 @@
    "title": "We're hiring: RAG Developer",
    "company": "Mirage Robotics Co.",
    "country": "Qatar",
+   "subdivision": null,
    "city": "Doha",
    "location_raw": "Doha, Qatar",
    "work_mode": "onsite",
    "seniority": null,
-   "published_at": "2026-10-25T13:57:43.382905Z",
+   "published_at": "2026-10-25T15:29:39.435054Z",
    "date_confidence": "exact",
    "intent": "recruiter",
    "intent_label": "Recruiter hiring announcement",
@@ -296,7 +308,7 @@
     "Skills: 2/5 matched (python, rag)",
     "Text similarity to your target profile: 17%",
     "Intent: Recruiter hiring announcement — recruiter signal: poster's position (Talent Acquisition Partner)",
-    "Location: Doha is in Qatar, which you selected",
+    "Location: Doha, Qatar is in Qatar, which you selected",
     "Recency: published 19 hours ago (window 7d)"
    ],
    "matched_skills": [
@@ -321,11 +333,12 @@
    "title": "Applied Scientist, Generative AI",
    "company": "Saffron Grid",
    "country": "Saudi Arabia",
+   "subdivision": null,
    "city": "Riyadh",
    "location_raw": "Riyadh, Saudi Arabia (hybrid)",
    "work_mode": "hybrid",
    "seniority": null,
-   "published_at": "2026-10-23T21:57:43.382905Z",
+   "published_at": "2026-10-23T23:29:39.435054Z",
    "date_confidence": "exact",
    "intent": "explicit_vacancy",
    "intent_label": "Explicit vacancy",
@@ -341,7 +354,7 @@
     "Skills: 2/5 matched (python, llm)",
     "Text similarity to your target profile: 25%",
     "Intent: Explicit vacancy — published as a job listing by the source",
-    "Location: Riyadh matches your selection",
+    "Location: Riyadh, Saudi Arabia matches your selection",
     "Recency: published 2 days ago (window 7d)"
    ],
    "matched_skills": [
@@ -361,11 +374,12 @@
    "title": "Machine Learning Engineer, Search",
    "company": "Atlas Souk Commerce",
    "country": "United Arab Emirates",
+   "subdivision": null,
    "city": "Dubai",
    "location_raw": "Dubai, United Arab Emirates",
    "work_mode": "hybrid",
    "seniority": null,
-   "published_at": "2026-10-22T05:57:43.382905Z",
+   "published_at": "2026-10-22T07:29:39.435054Z",
    "date_confidence": "exact",
    "intent": "explicit_vacancy",
    "intent_label": "Explicit vacancy",
@@ -381,7 +395,7 @@
     "Skills: 2/5 matched (python, rag)",
     "Text similarity to your target profile: 10%",
     "Intent: Explicit vacancy — published as a job listing by the source",
-    "Location: Dubai is in United Arab Emirates, which you selected",
+    "Location: Dubai, United Arab Emirates is in United Arab Emirates, which you selected",
     "Recency: published 4 days ago (window 7d)"
    ],
    "matched_skills": [
@@ -403,11 +417,12 @@
    "title": "LangGraph contractor needed",
    "company": "Corniche Studio",
    "country": null,
+   "subdivision": null,
    "city": null,
    "location_raw": "Remote",
    "work_mode": "remote",
    "seniority": null,
-   "published_at": "2026-10-25T15:57:43.382905Z",
+   "published_at": "2026-10-25T17:29:39.435054Z",
    "date_confidence": "exact",
    "intent": "hiring_manager",
    "intent_label": "Direct hiring-manager announcement",
@@ -449,11 +464,12 @@
    "title": "AI Research Scientist",
    "company": "Qasr Analytics",
    "country": "United Arab Emirates",
+   "subdivision": null,
    "city": "Abu Dhabi",
    "location_raw": "Abu Dhabi, UAE",
    "work_mode": "onsite",
    "seniority": null,
-   "published_at": "2026-10-20T03:57:43.382905Z",
+   "published_at": "2026-10-20T05:29:39.435054Z",
    "date_confidence": "exact",
    "intent": "hiring_manager",
    "intent_label": "Direct hiring-manager announcement",
@@ -469,7 +485,7 @@
     "Skills: 2/5 matched (agentic ai, llm)",
     "Text similarity to your target profile: 20%",
     "Intent: Direct hiring-manager announcement — first-person hiring phrase \"I'm hiring\"",
-    "Location: Abu Dhabi is in United Arab Emirates, which you selected",
+    "Location: Abu Dhabi, United Arab Emirates is in United Arab Emirates, which you selected",
     "Recency: published 6 days ago (window 7d)"
    ],
    "matched_skills": [
@@ -491,11 +507,11 @@
   }
  ],
  "summary": {
-  "fetched": 20,
+  "fetched": 25,
   "returned": 10,
   "removed_duplicates": 1,
   "removed_by_exclusion": 0,
-  "removed_by_location": 4,
+  "removed_by_location": 9,
   "removed_by_date": 2,
   "removed_unrelated": 2,
   "removed_below_min_score": 0,
@@ -508,7 +524,7 @@
    "label": "Demo dataset (synthetic)",
    "status": "ok",
    "live": false,
-   "fetched": 20,
+   "fetched": 25,
    "message": null
   }
  ],

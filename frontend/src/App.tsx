@@ -3,10 +3,11 @@ import { useCallback, useEffect, useState } from "react";
 import { ImportPanel } from "./components/ImportPanel";
 import { ResearchPanel } from "./components/ResearchPanel";
 import { Results } from "./components/Results";
-import { DEFAULT_FORM, SearchPanel, type FormState } from "./components/SearchPanel";
+import { SearchPanel } from "./components/SearchPanel";
 import { SourcesPanel } from "./components/SourcesPanel";
 import { WakeNotice } from "./components/WakeNotice";
 import { API_URL, ApiError, exportXlsx, search } from "./lib/api";
+import { DEFAULT_FORM, sanitizeForm, type FormState } from "./lib/form";
 import { download, toCsv } from "./lib/safe";
 import { clearStored, useStoredState } from "./lib/storage";
 import type { ApplicationStatus, ImportedPost, Mode, SearchResponse, Tracked } from "./lib/types";
@@ -17,7 +18,7 @@ const REPO_URL = "https://github.com/Pratik653/HireRadar";
 
 export default function App() {
   const [mode, setMode] = useStoredState<Mode>("mode", "demo");
-  const [form, setForm] = useStoredState<FormState>("form", DEFAULT_FORM);
+  const [form, setForm] = useStoredState<FormState>("form", DEFAULT_FORM, sanitizeForm);
   const [imports, setImports] = useStoredState<ImportedPost[]>("imports", []);
   const [tracking, setTracking] = useStoredState<Record<string, Tracked>>("tracking", {});
   const [tab, setTab] = useState<Tab>("results");
@@ -161,8 +162,7 @@ export default function App() {
             notice={notConfigured || <WakeNotice status={backend.status} justWoke={backend.justWoke} busy={busy} onRetry={runSearch} />}
             error={errorBox}
           />
-          <div className="flex justify-between py-3 text-xs text-slate-400">
-            <button type="button" onClick={() => setForm(DEFAULT_FORM)} className="hover:text-slate-700">Reset form</button>
+          <div className="flex justify-end py-3 text-xs text-slate-400">
             <button
               type="button"
               onClick={() => {

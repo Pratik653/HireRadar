@@ -1,31 +1,10 @@
-import { Plus, Search, Trash2 } from "lucide-react";
+import { Plus, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { SUGGESTED_BOARDS } from "../lib/catalog";
-import type { CompanyBoard, Days, LiveSource, Mode, SearchRequest, Seniority, WorkMode } from "../lib/types";
-import { LocationPicker } from "./LocationPicker";
-import { Chip, Section, TagInput } from "./ui";
-
-export type FormState = Omit<SearchRequest, "mode" | "imports">;
-
-export const DEFAULT_FORM: FormState = {
-  locations: [{ country_code: "AE" }, { country_code: "SA", city: "Riyadh" }, { country_code: "QA" }],
-  work_modes: ["onsite", "hybrid", "remote"],
-  titles: ["Applied AI Engineer", "LLM Engineer", "Python Developer"],
-  skills: ["Python", "RAG", "LangGraph", "Agentic AI", "LLM"],
-  description: "",
-  resume_text: "",
-  exclusions: [],
-  seniority: [],
-  days: 7,
-  include_undated: true,
-  sources: ["company_boards", "remotive", "manual_import"],
-  company_boards: [
-    { provider: "greenhouse", slug: "careem" },
-    { provider: "greenhouse", slug: "tamara" },
-    { provider: "ashby", slug: "ziina" },
-  ],
-  min_score: 0,
-};
+import { DEFAULT_FORM, isFieldReset, isFormDefault, resetField, type FormState, type ResettableField } from "../lib/form";
+import type { CompanyBoard, Days, LiveSource, Mode, Seniority, WorkMode } from "../lib/types";
+import { LocationExplorer } from "./LocationExplorer";
+import { Chip, ResetButton, Section, TagInput } from "./ui";
 
 const DAYS: { value: Days; label: string }[] = [
   { value: 1, label: "24 hours" },
@@ -63,6 +42,16 @@ export function SearchPanel({ form, setForm, mode, importCount, busy, onSearch, 
   const [showResume, setShowResume] = useState(Boolean(form.resume_text));
   const canSearch = form.titles.length > 0 || form.skills.length > 0 || form.description.trim().length > 0;
 
+  // One reset control per field. Resetting never starts a search.
+  const reset = (field: ResettableField, label: string, variant: "clear" | "restore" = "clear") => (
+    <ResetButton
+      label={label}
+      variant={variant}
+      disabled={isFieldReset(form, field)}
+      onClick={() => setForm(resetField(form, field))}
+    />
+  );
+
   const addBoard = (b: CompanyBoard) => {
     const slug = b.slug.trim().toLowerCase();
     if (!/^[a-z0-9][a-z0-9._-]{0,63}$/.test(slug)) return;
@@ -79,55 +68,64 @@ export function SearchPanel({ form, setForm, mode, importCount, busy, onSearch, 
         if (canSearch && !busy) onSearch();
       }}
     >
-      <Section title="Where">
-        <LocationPicker value={form.locations} onChange={(v) => set("locations", v)} />
-        <div className="flex flex-wrap gap-2 pt-1">
+      <Section
+        title="Where"
+        hint={form.locations.length ? `${form.locations.length} selected` : "any location"}
+        action={reset("locations", "Clear all locations")}
+      >
+        <LocationExplorer value={form.locations} onChange={(v) => set("locations", v)} />
+      </Section>
+
+      <Section title="Work arrangement" action={reset("work_modes", "Restore all work arrangements", "restore")}>
+        <div className="flex flex-wrap gap-2">
           {WORK_MODES.map((m) => (
             <Chip key={m} active={form.work_modes.includes(m)} onClick={() => set("work_modes", toggle(form.work_modes, m))}>
               {m === "onsite" ? "On-site" : m[0].toUpperCase() + m.slice(1)}
             </Chip>
           ))}
         </div>
+        {form.work_modes.length === 0 && <p className="text-xs text-amber-700">Select at least one arrangement, or nothing will match.</p>}
       </Section>
 
-      <Section title="Target roles" hint="Enter or comma to add">
+      <Section title="Target roles" hint="Enter or comma to add" action={reset("titles", "Clear all target roles")}>
         <TagInput label="Job titles" values={form.titles} onChange={(v) => set("titles", v)} placeholder="e.g. LLM Engineer" max={15} />
       </Section>
 
-      <Section title="Skills & keywords">
+      <Section title="Skills & keywords" action={reset("skills", "Clear all skills")}>
         <TagInput label="Skills" values={form.skills} onChange={(v) => set("skills", v)} placeholder="e.g. Python, RAG, LangGraph" max={40} />
       </Section>
 
-      <Section title="Desired job description" hint="optional">
+      <Section title="Desired job description" hint="optional" action={reset("description", "Clear job description")}>
         <textarea
           value={form.description}
           onChange={(e) => set("description", e.target.value.slice(0, 6000))}
           rows={3}
+          aria-label="Desired job description"
           placeholder="Describe the work you want: products, domain, team, responsibilities…"
           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
         />
-        {showResume ? (
-          <div className="space-y-1">
-            <textarea
-              value={form.resume_text}
-              onChange={(e) => set("resume_text", e.target.value.slice(0, 20000))}
-              rows={4}
-              placeholder="Paste resume text (plain text). Used for similarity only."
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-            />
-            <p className="text-xs text-slate-500">
-              Stored only in this browser. Sent with each search for scoring and not kept by the server.
-            </p>
-          </div>
-        ) : (
-          <button type="button" onClick={() => setShowResume(true)} className="text-sm text-indigo-700 hover:underline">
-            + Add resume text for better matching
-          </button>
-        )}
       </Section>
 
-      <Section title="Published within">
-        <div className="grid grid-cols-5 overflow-hidden rounded-lg border border-slate-300 bg-white text-sm" role="radiogroup">
+      {showResume || form.resume_text ? (
+        <Section title="Resume text" hint="optional" action={reset("resume_text", "Clear resume text")}>
+          <textarea
+            value={form.resume_text}
+            onChange={(e) => set("resume_text", e.target.value.slice(0, 20000))}
+            rows={4}
+            aria-label="Resume text"
+            placeholder="Paste resume text (plain text). Used for similarity only."
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          />
+          <p className="text-xs text-slate-500">Stored only in this browser. Sent with each search for scoring and not kept by the server.</p>
+        </Section>
+      ) : (
+        <button type="button" onClick={() => setShowResume(true)} className="text-sm text-indigo-700 hover:underline">
+          + Add resume text for better matching
+        </button>
+      )}
+
+      <Section title="Published within" action={reset("dates", "Restore default publication window (7 days)", "restore")}>
+        <div className="grid grid-cols-5 overflow-hidden rounded-lg border border-slate-300 bg-white text-sm" role="radiogroup" aria-label="Publication window">
           {DAYS.map((d) => (
             <button
               type="button"
@@ -150,7 +148,7 @@ export function SearchPanel({ form, setForm, mode, importCount, busy, onSearch, 
       <details className="group rounded-lg border border-slate-200 bg-white px-3 py-2">
         <summary className="cursor-pointer text-sm font-medium text-slate-700">Refine: seniority, exclusions, minimum score</summary>
         <div className="mt-3 space-y-4">
-          <Section title="Seniority" hint="none = any">
+          <Section title="Seniority" hint="none = any" action={reset("seniority", "Clear seniority preferences")}>
             <div className="flex flex-wrap gap-1.5">
               {SENIORITY.map((s) => (
                 <Chip key={s} active={form.seniority.includes(s)} onClick={() => set("seniority", toggle(form.seniority, s))}>
@@ -159,10 +157,10 @@ export function SearchPanel({ form, setForm, mode, importCount, busy, onSearch, 
               ))}
             </div>
           </Section>
-          <Section title="Exclude keywords">
+          <Section title="Exclude keywords" action={reset("exclusions", "Clear excluded keywords")}>
             <TagInput label="Exclusions" values={form.exclusions} onChange={(v) => set("exclusions", v)} placeholder="e.g. unpaid, sales" />
           </Section>
-          <Section title="Minimum score" hint={`${form.min_score}`}>
+          <Section title="Minimum score" hint={`${form.min_score}`} action={reset("min_score", "Reset minimum score to 0", "restore")}>
             <input
               type="range"
               min={0}
@@ -178,7 +176,7 @@ export function SearchPanel({ form, setForm, mode, importCount, busy, onSearch, 
       </details>
 
       {mode === "live" && (
-        <Section title="Live sources">
+        <Section title="Live sources" action={reset("sources", "Restore default sources and company boards", "restore")}>
           <div className="space-y-1.5">
             {SOURCES.map((s) => (
               <label key={s.key} className="flex items-start gap-2 text-sm">
@@ -190,6 +188,10 @@ export function SearchPanel({ form, setForm, mode, importCount, busy, onSearch, 
               </label>
             ))}
           </div>
+          <p className="text-xs text-slate-500">
+            Location filters cover the whole world, but live listings come only from these sources. Add company boards
+            for the markets you target.
+          </p>
           {form.sources.includes("company_boards") && (
             <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-2">
               <ul className="flex flex-wrap gap-1.5">
@@ -254,14 +256,26 @@ export function SearchPanel({ form, setForm, mode, importCount, busy, onSearch, 
       <div className="sticky bottom-0 -mx-4 space-y-2 border-t border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur sm:-mx-5 sm:px-5">
         {notice}
         {error}
-        <button
-          type="submit"
-          disabled={!canSearch || busy}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-700 px-4 py-2.5 font-medium text-white shadow-sm transition hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {busy ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-300 border-t-white" aria-hidden /> : <Search size={18} />}
-          {busy ? "Searching…" : mode === "demo" ? "Search demo data" : "Search live sources"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={!canSearch || busy}
+            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-indigo-700 px-4 py-2.5 font-medium text-white shadow-sm transition hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {busy ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-300 border-t-white" aria-hidden /> : <Search size={18} />}
+            <span className="truncate">{busy ? "Searching…" : mode === "demo" ? "Search demo data" : "Search live sources"}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setForm(DEFAULT_FORM)}
+            disabled={isFormDefault(form)}
+            title="Reset all filters to their defaults (imports, statuses and results are kept)"
+            aria-label="Reset all filters"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 transition hover:bg-slate-100 disabled:cursor-default disabled:opacity-50"
+          >
+            <RotateCcw size={15} aria-hidden /> Reset all
+          </button>
+        </div>
         {!canSearch && <p className="text-center text-xs text-slate-500">Add a job title, a skill or a description to search.</p>}
       </div>
     </form>
