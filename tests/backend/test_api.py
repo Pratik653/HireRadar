@@ -36,8 +36,9 @@ def test_health(client):
 
 def test_meta_lists_locations_and_sources(client):
     body = client.get("/api/meta").json()
-    countries = {c["code"] for c in body["locations"][0]["countries"]}
-    assert countries == {"AE", "QA", "BH", "SA", "KW", "OM"}
+    locations = body["locations"]
+    assert locations["countries"] > 200 and locations["subdivisions"] > 100 and locations["cities"] > 250
+    assert {"world", "asia", "europe", "gcc"} <= {r["id"] for r in locations["regions"]}
     assert {s["key"] for s in body["sources"]} == {"manual_import", "company_boards", "remotive"}
     assert body["demo_source"]["live"] is False
 
@@ -233,9 +234,9 @@ def test_export_workbook(client):
 
     title_cell = leads.cell(row=2, column=2)
     assert title_cell.data_type == "s" and title_cell.value.startswith("=HYPERLINK")
-    assert leads.cell(row=2, column=18).data_type == "s"
-    assert leads.cell(row=2, column=15).hyperlink.target.startswith("https://example.org/")
-    assert leads.cell(row=2, column=22).value == "SYNTHETIC"
+    assert leads.cell(row=2, column=19).data_type == "s"
+    assert leads.cell(row=2, column=16).hyperlink.target.startswith("https://example.org/")
+    assert leads.cell(row=2, column=23).value == "SYNTHETIC"
 
     tracker = wb["Application Tracker"]
     assert tracker.cell(row=2, column=5).value == "applied"
@@ -253,4 +254,4 @@ def test_export_missing_values_use_placeholder(client):
     wb = load_workbook(BytesIO(client.post("/api/export", json={"response": search}).content))
     leads = wb["Hiring Leads"]
     assert leads.cell(row=2, column=4).value == "—"
-    assert leads.cell(row=2, column=15).hyperlink is None
+    assert leads.cell(row=2, column=16).hyperlink is None

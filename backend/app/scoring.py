@@ -26,6 +26,7 @@ from app.models import (
     INTENT_LABELS,
     Contact,
     Intent,
+    LocationSelection,
     Opportunity,
     ScoreBreakdown,
     SearchRequest,
@@ -50,7 +51,6 @@ DUPLICATE_TEXT_SIMILARITY = 0.9
 # Below this role relevance an item is hidden: intent, location and recency alone
 # would otherwise lift an unrelated vacancy to a mid-table score.
 MIN_ROLE_RELEVANCE = 0.15
-WORLDWIDE = re.compile(r"\b(worldwide|anywhere|global|all countries)\b", re.I)
 
 
 @dataclass
@@ -59,8 +59,7 @@ class _Candidate:
     intent: Intent
     intent_score: float
     intent_evidence: str
-    country: str | None
-    city: str | None
+    place: geo.Place | None
     work_mode: str | None
     geo_score: float
     geo_reason: str
@@ -83,50 +82,82 @@ class Counts:
     undated: int = 0
 
 
-def _geography(
-    record: RawRecord, request: SearchRequest
-) -> tuple[bool, float, str, str | None, str | None, str | None]:
-    """Returns (keep, score, reason, country, city, work_mode)."""
+@dataclass(frozen=True)
+class _Geo:
+    keep: bool
+    score: float
+    reason: str
+    place: geo.Place | None
+    mode: str | None
+
+
+def _match(place: geo.Place, sel: LocationSelection) -> tuple[float, str]:
+    """How well one detected place satisfies one selected location."""
+    if sel.region:
+        if place.country_code in sel.countries():
+            return 1.0, f"{place.label} is in {sel.label}"
+        return 0.0, ""
+    if place.country_code != sel.country_code:
+        return 0.0, ""
+    if sel.city:
+        if place.city == sel.city and (sel.subdivision is None or place.subdivision == sel.subdivision):
+            return 1.0, f"{place.label} matches your selection"
+        if sel.subdivision and place.subdivision == sel.subdivision:
+            return 0.7, f"{place.label}: same state/province as {sel.city}, different city"
+        return 0.6, f"{place.label}: same country as {sel.city}, different or unstated city"
+    if sel.subdivision:
+        if place.subdivision == sel.subdivision:
+            return 1.0, f"{place.label} is in {sel.label}"
+        return 0.6, f"{place.label}: same country, outside {sel.label}"
+    return 1.0, f"{place.label} is in {place.country}, which you selected"
+
+
+def _geography(record: RawRecord, request: SearchRequest) -> _Geo:
+    """Location relevance. Selections are OR-ed: the best match counts."""
     location = record.location_raw or ""
-    places = geo.find_places(location) or geo.find_places(record.text[:600])
+    places, regions = geo.catalog().scan(location)
+    if not location.strip():
+        places = geo.find_places(record.text[:600], strict=True)
     mode = geo.detect_work_mode(location) or (
         "remote" if record.remote_hint else geo.detect_work_mode(record.text[:600])
     )
     first = places[0] if places else None
-    country, city = (first.country, first.city) if first else (None, None)
 
     if mode and mode not in request.work_modes:
-        return False, 0, f"{mode} roles are not in your work-mode preferences", country, city, mode
+        return _Geo(False, 0, f"{mode} roles are not in your work-mode preferences", first, mode)
+    selections = request.locations
+    if not selections:
+        return _Geo(True, 1.0, "no location filter selected", first, mode)
+    if any(sel.region == "world" for sel in selections):
+        return _Geo(True, 1.0, "worldwide selected", first, mode)
 
-    if not request.locations:
-        return True, 1.0, "no location filter selected", country, city, mode
-
-    wanted_countries = {loc.country_code for loc in request.locations}
-    whole_countries = {loc.country_code for loc in request.locations if not loc.city}
-    wanted_cities = {(loc.country_code, loc.city) for loc in request.locations if loc.city}
-
+    best = (0.0, "", first)
     for place in places:
-        if (place.country_code, place.city) in wanted_cities:
-            return True, 1.0, f"{place.city} matches your selection", place.country, place.city, mode
-    for place in places:
-        if place.country_code in whole_countries:
-            label = place.city or place.country
-            return True, 1.0, f"{label} is in {place.country}, which you selected", place.country, place.city, mode
-    for place in places:
-        if place.country_code in wanted_countries:
-            where = f"{place.city}, {place.country}" if place.city else place.country
-            return True, 0.6, f"{where}: same country, different city", place.country, place.city, mode
+        for sel in selections:
+            score, reason = _match(place, sel)
+            if score > best[0]:
+                best = (score, reason, place)
+    score, reason, place = best
 
     if mode == "remote":
-        if geo.mentions_region(location):
-            return True, 0.9, "remote role open to the GCC region", country, city, mode
-        if WORLDWIDE.search(location):
-            return True, 0.8, "remote role open worldwide", country, city, mode
-        return True, 0.5, "remote role; candidate-location eligibility not verified", country, city, mode
+        if score > 0:
+            # A remote role only needs to accept candidates in that country.
+            return _Geo(True, max(score, 0.9), f"remote role; {reason}", place, mode)
+        wanted = set().union(*(sel.countries() for sel in selections))
+        if regions & wanted:
+            return _Geo(True, 0.9, "remote role open to a region that includes your selection", first, mode)
+        if places or regions:
+            return _Geo(False, 0, f"remote role limited to '{location}', outside your selection", first, mode)
+        if geo.WORLDWIDE_PATTERN.search(location):
+            return _Geo(True, 0.8, "remote role open worldwide", first, mode)
+        return _Geo(True, 0.5, "remote role; candidate-location eligibility not verified", first, mode)
 
-    if places or location.strip():
-        return False, 0, f"location '{location or places[0].country}' is outside your selection", country, city, mode
-    return True, 0.3, "location not stated; verify before applying", None, None, mode
+    if score > 0:
+        return _Geo(True, score, reason, place, mode)
+    if places or regions or location.strip():
+        where = location or (first.label if first else "")
+        return _Geo(False, 0, f"location '{where}' is outside your selection", first, mode)
+    return _Geo(True, 0.3, "location not stated; verify before applying", None, mode)
 
 
 def _recency(record: RawRecord, request: SearchRequest, now: datetime) -> tuple[bool, float, str]:
@@ -195,8 +226,8 @@ def score(records: list[RawRecord], request: SearchRequest, now: datetime) -> tu
             counts.unrelated += 1
             continue
 
-        keep, geo_score, geo_reason, country, city, mode = _geography(record, request)
-        if not keep:
+        location = _geography(record, request)
+        if not location.keep:
             counts.location += 1
             continue
 
@@ -213,11 +244,10 @@ def score(records: list[RawRecord], request: SearchRequest, now: datetime) -> tu
                 intent=result.intent,
                 intent_score=result.score,
                 intent_evidence=result.evidence,
-                country=country,
-                city=city,
-                work_mode=mode,
-                geo_score=geo_score,
-                geo_reason=geo_reason,
+                place=location.place,
+                work_mode=location.mode,
+                geo_score=location.score,
+                geo_reason=location.reason,
                 recency=recency,
                 recency_reason=recency_reason,
                 doc=f"{normalize_title(record.title)} {normalize_title(record.title)} {record.text}",
@@ -303,8 +333,9 @@ def score(records: list[RawRecord], request: SearchRequest, now: datetime) -> tu
                 id=_stable_id(record),
                 title=record.title,
                 company=record.company,
-                country=cand.country,
-                city=cand.city,
+                country=cand.place.country if cand.place else None,
+                subdivision=cand.place.subdivision_name if cand.place else None,
+                city=cand.place.city if cand.place else None,
                 location_raw=record.location_raw,
                 work_mode=cand.work_mode,
                 seniority=seniority,
