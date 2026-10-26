@@ -14,6 +14,11 @@ All notable changes to this project are documented here. The format follows
 - Reset control on every search field and a *Reset all* button. Imports, application statuses and results are kept.
 - *State / Province* in results and in the Excel report; readable location labels in the Search Summary.
 - Synthetic demo items outside the GCC (Berlin, Bengaluru, Toronto, Sydney).
+- LinkedIn research planner: 30–60 distinct searches per session across ten post categories (hiring
+  announcements, recruiters, hiring managers, referrals, urgent hiring, startups, team expansion, technology,
+  alternative titles, indirect signals) plus Google and Bing searches for indexed LinkedIn posts. Related titles
+  and technologies are added, each query names one place, and the tab gains category filters, a query filter,
+  Show more / Show all, and a one-at-a-time *Open next search*.
 
 ### Changed
 
