@@ -145,7 +145,9 @@ def _geography(record: RawRecord, request: SearchRequest) -> _Geo:
             return _Geo(True, max(score, 0.9), f"remote role; {reason}", place, mode)
         wanted = set().union(*(sel.countries() for sel in selections))
         if regions & wanted:
-            return _Geo(True, 0.9, "remote role open to a region that includes your selection", first, mode)
+            # Matched through a region word, not a named place: report no country
+            # rather than the first place listed (which may be outside the selection).
+            return _Geo(True, 0.9, "remote role open to a region that includes your selection", None, mode)
         if places or regions:
             return _Geo(False, 0, f"remote role limited to '{location}', outside your selection", first, mode)
         if geo.WORLDWIDE_PATTERN.search(location):
