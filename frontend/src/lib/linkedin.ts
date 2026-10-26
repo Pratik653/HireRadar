@@ -1,4 +1,4 @@
-import { COUNTRY_BY_CODE } from "./catalog";
+import { COUNTRY_BY_CODE, REGION_BY_ID, subdivisionName } from "./locations";
 import type { Days, LocationSelection } from "./types";
 
 // LinkedIn's content search only offers these date buckets.
@@ -13,7 +13,14 @@ function quoted(term: string): string {
 }
 
 function placeNames(locations: LocationSelection[]): string[] {
-  const names = locations.map((l) => l.city || COUNTRY_BY_CODE[l.country_code]?.name).filter(Boolean) as string[];
+  const names = locations
+    .filter((l) => l.region !== "world") // a worldwide search needs no place terms
+    .map((l) =>
+      l.region
+        ? REGION_BY_ID[l.region]?.name
+        : l.city || (l.subdivision && subdivisionName(l.subdivision)) || COUNTRY_BY_CODE[l.country_code ?? ""]?.name,
+    )
+    .filter(Boolean) as string[];
   return [...new Set(names)];
 }
 

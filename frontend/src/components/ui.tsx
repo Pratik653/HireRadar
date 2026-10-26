@@ -1,15 +1,61 @@
-import { X } from "lucide-react";
+import { RotateCcw, X } from "lucide-react";
 import { useState, type KeyboardEvent, type ReactNode } from "react";
 
-export function Section({ title, hint, children }: { title: string; hint?: ReactNode; children: ReactNode }) {
+export function Section({
+  title,
+  hint,
+  action,
+  children,
+}: {
+  title: string;
+  hint?: ReactNode;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <section className="space-y-2">
-      <div className="flex items-baseline justify-between gap-2">
+      <div className="flex min-h-8 items-center justify-between gap-2">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
-        {hint && <span className="text-xs text-slate-400">{hint}</span>}
+        <div className="flex items-center gap-1.5">
+          {hint && <span className="text-xs text-slate-400">{hint}</span>}
+          {action}
+        </div>
       </div>
       {children}
     </section>
+  );
+}
+
+/**
+ * Small icon button that clears or restores one field. "clear" shows an ×,
+ * "restore" a counter-clockwise arrow. Disabled when there is nothing to reset,
+ * so it never shifts the layout by appearing and disappearing.
+ */
+export function ResetButton({
+  onClick,
+  disabled,
+  label,
+  variant = "clear",
+  className = "",
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  label: string;
+  variant?: "clear" | "restore";
+  className?: string;
+}) {
+  const Icon = variant === "clear" ? X : RotateCcw;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={label}
+      aria-label={label}
+      className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 ${className}`}
+    >
+      <Icon size={15} aria-hidden />
+    </button>
   );
 }
 

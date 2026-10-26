@@ -33,8 +33,11 @@ export function clearStored(): void {
   }
 }
 
-export function useStoredState<T>(key: string, fallback: T) {
-  const [value, setValue] = useState<T>(() => readStored(key, fallback));
+export function useStoredState<T>(key: string, fallback: T, repair?: (stored: unknown) => T) {
+  const [value, setValue] = useState<T>(() => {
+    const stored = readStored<unknown>(key, fallback);
+    return repair ? repair(stored) : (stored as T);
+  });
   useEffect(() => writeStored(key, value), [key, value]);
   return [value, setValue] as const;
 }
