@@ -192,6 +192,11 @@ def test_remote_eligibility_follows_stated_region():
     results, summary = _score([{"region": "gcc"}], restricted)
     assert results == [] and summary.removed_by_location == 1
 
+    mixed = record(location_raw="Remote — Europe, USA, Canada, APAC", remote_hint=True)
+    result = _score([{"country_code": "AE"}], mixed)[0][0]
+    assert result.breakdown.geography == 0.9
+    assert result.country is None  # matched via "APAC", so it must not be shown as a US role
+
     emea = record(location_raw="Remote — EMEA", remote_hint=True)
     assert _score([{"country_code": "AE"}], emea)[0][0].breakdown.geography == 0.9
 
