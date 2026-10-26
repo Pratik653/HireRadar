@@ -22,7 +22,7 @@ and exports the result to a formatted Excel workbook with an application tracker
 
 | | |
 |---|---|
-| **Targeting** | Region → Country → City selection (GCC: UAE, Qatar, Bahrain, Saudi Arabia, Kuwait, Oman), on-site/hybrid/remote, multiple job titles and skills, a free-text job description, optional resume text, exclusions, seniority, and a window of 24 h, 3, 7, 14 or 30 days |
+| **Targeting** | Worldwide Continent → Country → State/Province → City explorer (216 countries by ISO 3166 code, states for India, the US, Canada, Australia and Germany, 270+ hub cities) with search, presets (GCC, India, Europe, USA, Canada, Australia, Africa, Worldwide) and removable chips; on-site/hybrid/remote, multiple job titles and skills, a free-text job description, optional resume text, exclusions, seniority, and a window of 24 h, 3, 7, 14 or 30 days. Every field has its own reset, plus *Reset all* |
 | **Hiring intent** | Each item gets one of six classes: explicit vacancy, hiring-manager post, recruiter post, general recruitment, weak signal, unrelated. `#OpenToWork` and "I've joined…" posts are removed. Weak signals are labelled, never presented as vacancies |
 | **Explainable score** | `100 × (0.4 role + 0.3 intent + 0.2 geography + 0.1 recency)`, with a breakdown and plain-language reasons for every result |
 | **Matching** | Title normalisation (`Sr. ML Eng` → `senior machine learning engineer`), role families so "AI Engineer" doesn't match "AI Sales Executive", skill synonyms (RAG = retrieval-augmented generation), TF-IDF similarity |
@@ -86,7 +86,7 @@ npm install
 npm run dev        # http://localhost:5173, talks to http://localhost:8000
 ```
 
-Tests: `pytest -q` in `backend/` (70 tests) and `npm test` in `frontend/`. Deployment:
+Tests: `pytest -q` in `backend/` (110 tests) and `npm test` in `frontend/`. Deployment:
 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Limitations
@@ -97,14 +97,18 @@ Tests: `pytest -q` in `backend/` (70 tests) and `npm test` in `frontend/`. Deplo
   readable. They have not been validated against labelled data.
 - **Intent rules are English-only** and keyword-based. Unusual phrasing, or posts in Arabic, may be classified
   as weak or unrelated.
-- **Location detection uses a catalog.** Places outside it (for example "San Francisco") are recognised only as
-  "not in your selection".
+- **Worldwide filters, limited live coverage.** You can target any of 216 countries, but live listings come only from
+  the company boards you add, Remotive's remote roles and your imports. Many markets have no live source yet.
+- **Location detection uses a catalog** of hub cities. A listing in a smaller town is matched at state or country
+  level when the listing names them, and otherwise counts as outside your selection. Ambiguous names
+  ("Georgia", a bare "Washington") are resolved from context or left unmatched rather than guessed.
 - **No accounts, no sync.** Data stays in one browser. Clearing site data removes it.
 - **Cold starts.** The first request after an idle period can take a while on the free tier.
 
 ## Roadmap
 
-- More markets in the location catalog (Egypt, Jordan, India, Europe), with matching frontend entries.
+- More hub cities and state/province data for further countries.
+- Source adapters with authorised coverage outside the GCC (for example more public ATS boards per market).
 - Additional authorised sources: Workable and SmartRecruiters public job widgets, and more Remotive-style APIs.
 - A small labelled set of hiring posts to measure intent precision and recall and tune the weights.
 - Optional lightweight embeddings, if they fit the free-tier memory budget.

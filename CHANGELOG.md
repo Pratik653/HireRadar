@@ -3,6 +3,26 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Worldwide location targeting: Continent → Country → State/Province → City explorer covering 216 countries
+  (ISO 3166-1), states and provinces for India, the United States, Canada, Australia and Germany (ISO 3166-2) and
+  270+ hub cities, with search, presets (GCC, India, Europe, USA, Canada, Australia, Africa, Worldwide),
+  removable chips and per-level clear controls.
+- Reset control on every search field and a *Reset all* button. Imports, application statuses and results are kept.
+- *State / Province* in results and in the Excel report; readable location labels in the Search Summary.
+- Synthetic demo items outside the GCC (Berlin, Bengaluru, Toronto, Sydney).
+
+### Changed
+
+- Geographic matching works at region, country, state and city level with OR semantics, and resolves ambiguous
+  place names from context instead of guessing.
+- Remote roles limited to regions outside the selection are now removed instead of being shown as "eligibility
+  not verified".
+- Location selections accept `region` and `subdivision`; the earlier `{country_code, city}` shape still works.
+
 ## [0.1.0] - 2026-10-26
 
 First public release.
