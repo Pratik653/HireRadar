@@ -40,17 +40,54 @@ DateConfidence = Literal["exact", "reported", "unknown"]
 
 
 class LocationSelection(BaseModel):
-    country_code: str = Field(min_length=2, max_length=2)
+    """One selected place: a region (continent, group or worldwide), a whole
+    country, an ISO 3166-2 subdivision, or a city inside a country/subdivision.
+    The older ``{"country_code", "city"}`` shape is still accepted."""
+
+    region: str | None = Field(default=None, max_length=32)
+    country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    subdivision: str | None = Field(default=None, max_length=8)
     city: str | None = Field(default=None, max_length=60)
 
     @model_validator(mode="after")
     def _known(self) -> LocationSelection:
+        cat = geo.catalog()
+        if self.region:
+            if self.region not in cat.regions:
+                raise ValueError(f"unknown region {self.region}")
+            if self.country_code or self.subdivision or self.city:
+                raise ValueError("a region selection cannot also name a country, subdivision or city")
+            return self
+        if not self.country_code:
+            raise ValueError("a location needs a region or a country_code")
         self.country_code = self.country_code.upper()
-        if geo.country_name(self.country_code) is None:
+        if self.country_code not in cat.countries:
             raise ValueError(f"unsupported country code {self.country_code}")
-        if self.city and not geo.known_city(self.country_code, self.city):
-            raise ValueError(f"unsupported city {self.city} for {self.country_code}")
+        if self.subdivision:
+            self.subdivision = self.subdivision.upper()
+            sub = cat.subdivisions.get(self.subdivision)
+            if not sub or sub["country"] != self.country_code:
+                raise ValueError(f"unknown subdivision {self.subdivision} for {self.country_code}")
+        if self.city:
+            if self.subdivision is None and cat.countries[self.country_code].get("subdivisions"):
+                matches = [s for (c, s), names in cat.cities.items() if c == self.country_code and self.city in names]
+                if len(matches) != 1:
+                    raise ValueError(f"city {self.city} needs a subdivision in {self.country_code}")
+                self.subdivision = matches[0]
+            if self.city not in cat.cities.get((self.country_code, self.subdivision), set()):
+                raise ValueError(f"unsupported city {self.city} for {self.subdivision or self.country_code}")
         return self
+
+    @property
+    def label(self) -> str:
+        cat = geo.catalog()
+        if self.region:
+            return cat.regions[self.region]["name"]
+        sub = cat.subdivisions[self.subdivision]["name"] if self.subdivision else None
+        return geo.Place(self.country_code, cat.country_name(self.country_code), self.subdivision, sub, self.city).label
+
+    def countries(self) -> set[str]:
+        return geo.catalog().region_countries(self.region) if self.region else {self.country_code}
 
 
 class CompanyBoard(BaseModel):
@@ -98,7 +135,7 @@ class SearchRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     mode: Literal["demo", "live"] = "live"
-    locations: list[LocationSelection] = Field(default_factory=list, max_length=40)
+    locations: list[LocationSelection] = Field(default_factory=list, max_length=100)
     work_modes: list[WorkMode] = Field(default_factory=lambda: ["onsite", "hybrid", "remote"])
     titles: list[ShortText] = Field(default_factory=list, max_length=15)
     skills: list[ShortText] = Field(default_factory=list, max_length=40)
@@ -151,6 +188,7 @@ class Opportunity(BaseModel):
     title: str
     company: str | None = None
     country: str | None = None
+    subdivision: str | None = None
     city: str | None = None
     location_raw: str | None = None
     work_mode: WorkMode | None = None

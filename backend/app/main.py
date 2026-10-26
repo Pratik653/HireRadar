@@ -72,7 +72,7 @@ async def health() -> dict:
 async def meta() -> dict:
     return {
         "version": __version__,
-        "locations": geo.catalog(),
+        "locations": geo.summary(),
         "weights": WEIGHTS,
         "sources": [asdict(a.info) for a in LIVE_ADAPTERS.values()],
         "demo_source": asdict(DEMO_ADAPTER.info),

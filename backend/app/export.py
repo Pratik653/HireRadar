@@ -75,6 +75,7 @@ def _leads(ws: Worksheet, results: list[Opportunity], tracking: dict[str, Tracke
         ("Contact position", 26),
         ("Contact source", 14),
         ("Country", 18),
+        ("State / Province", 18),
         ("City", 14),
         ("Location as listed", 26),
         ("Work mode", 11),
@@ -102,6 +103,7 @@ def _leads(ws: Worksheet, results: list[Opportunity], tracking: dict[str, Tracke
             contact.position if contact else None,
             contact.provenance.replace("_", " ") if contact else None,
             opp.country,
+            opp.subdivision,
             opp.city,
             opp.location_raw,
             opp.work_mode,
@@ -112,14 +114,14 @@ def _leads(ws: Worksheet, results: list[Opportunity], tracking: dict[str, Tracke
         ]
         for col, value in enumerate(values, start=1):
             _put(ws, row, col, value)
-        _link(ws, row, 15, opp.source_url, "Open post")
-        _link(ws, row, 16, contact.profile_url if contact else None, "Profile")
-        _put(ws, row, 17, ", ".join(opp.matched_skills))
-        _put(ws, row, 18, opp.snippet, wrap=True)
-        _put(ws, row, 19, "\n".join(opp.explanations), wrap=True)
-        _put(ws, row, 20, len(opp.duplicates))
-        _put(ws, row, 21, tracking.get(opp.id, TrackedStatus()).status.replace("_", " "))
-        _put(ws, row, 22, "SYNTHETIC" if opp.is_demo else "live")
+        _link(ws, row, 16, opp.source_url, "Open post")
+        _link(ws, row, 17, contact.profile_url if contact else None, "Profile")
+        _put(ws, row, 18, ", ".join(opp.matched_skills))
+        _put(ws, row, 19, opp.snippet, wrap=True)
+        _put(ws, row, 20, "\n".join(opp.explanations), wrap=True)
+        _put(ws, row, 21, len(opp.duplicates))
+        _put(ws, row, 22, tracking.get(opp.id, TrackedStatus()).status.replace("_", " "))
+        _put(ws, row, 23, "SYNTHETIC" if opp.is_demo else "live")
     _finish_table(ws, len(headers), len(results))
 
 
@@ -129,7 +131,7 @@ def _summary(ws: Worksheet, payload: ExportRequest) -> None:
     s = response.summary
     ws.column_dimensions["A"].width = 30
     ws.column_dimensions["B"].width = 100
-    locations = ", ".join(f"{loc.city}, {loc.country_code}" if loc.city else loc.country_code for loc in req.locations)
+    locations = "; ".join(loc.label for loc in req.locations)
     rows: list[tuple[str, object]] = [
         ("Mode", "DEMO — synthetic data, not real opportunities" if response.mode == "demo" else "LIVE"),
         ("Generated", response.generated_at.strftime("%Y-%m-%d %H:%M UTC")),
@@ -177,7 +179,8 @@ def _summary(ws: Worksheet, payload: ExportRequest) -> None:
         ),
         (
             "Geography",
-            "Selected city 1.0, selected country 1.0, same country other city 0.6, remote 0.5–0.9, unstated 0.3.",
+            "Inside a selected region, country, state or city 1.0; same state, other city 0.7; same country, "
+            "other city or state 0.6; remote 0.5–1.0 by stated eligibility; unstated 0.3. Selections are OR-ed.",
         ),
         ("Recency", "Linear from 1.0 (just published) to 0 (end of window). Unknown dates score 0."),
         ("Caveat", "Weights are heuristics, not validated accuracy measures. Verify every lead at its source."),
