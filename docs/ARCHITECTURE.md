@@ -1,0 +1,117 @@
+# Architecture
+
+HireRadar is two separately deployed parts:
+
+```
+ Browser (GitHub Pages)                         Render free web service
+ ┌──────────────────────────────┐   HTTPS/JSON  ┌────────────────────────────────────────────┐
+ │ React + TypeScript (Vite)    │ ────────────▶ │ FastAPI                                    │
+ │  search form, results, LinkedIn│  /api/search  │  validation (Pydantic) → adapters → scoring │
+ │  research links, imports     │  /api/export  │  → dedupe → response / XLSX                │
+ │  localStorage: preferences,  │  /health      │                                            │
+ │  imports, application status │               │  outbound allowlist: Greenhouse, Lever,    │
+ └──────────────────────────────┘               │  Ashby, Remotive                           │
+                                                └────────────────────────────────────────────┘
+```
+
+The API is stateless. It has no database and keeps nothing between requests except a 15-minute in-memory cache
+of upstream API responses and rate-limit counters. A restart loses both, which is fine.
+
+## Backend layout (`backend/app`)
+
+| Module | Responsibility |
+|---|---|
+| `models.py` | Request/response contracts. `SearchRequest` validates every field: country and city codes against the catalog, board slugs against a strict pattern, URLs through `safe_public_url`, list sizes and text lengths. |
+| `geo.py` | Region → country → city catalog with aliases (`DXB`, `KSA`, `DIFC`, `Al Khobar` …), place detection and work-mode detection. |
+| `text.py` | Title normalisation (`Sr. ML Eng` → `senior machine learning engineer`), role families, skill synonyms and "implies" relations, seniority detection, evidence snippets. |
+| `intent.py` | Rule-based hiring-intent classifier. Returns the class, its score and the phrase that triggered it. |
+| `scoring.py` | Filters (exclusions, intent, location/work mode, date window), the four score components, role-relevance floor, deduplication. |
+| `sources/` | Adapters. Each returns `FetchResult(records, warnings)` of `RawRecord`s and carries a `SourceInfo` describing auth, coverage, rate limits, terms and reliability. |
+| `sources/http.py` | The only way adapters reach the network: HTTPS to an allowlist of hosts, no redirects, response size cap, timeouts, small TTL cache. |
+| `search.py` | Runs the selected adapters concurrently, turns failures into per-source status, never substitutes demo data. |
+| `export.py` | openpyxl workbook: Hiring Leads, Search Summary, Application Tracker. |
+| `security.py` | URL validation, rate limiter, request-size and header middleware. |
+
+## Scoring
+
+```
+score = 100 × (0.4 × role + 0.3 × intent + 0.2 × geography + 0.1 × recency)
+```
+
+**Role** (0–1) is a weighted mean of the parts that apply to the query:
+
+- title overlap (0.35): the share of a target title's core words found in the job title. If both titles have a
+  role noun from different families (engineering vs sales), the overlap is multiplied by 0.4. This stops
+  "AI Engineer" matching "AI Sales Executive" on the word "AI";
+- skill coverage (0.35): the share of the user's skills found in the title, text or tags. Synonyms such as
+  `RAG = retrieval-augmented generation` count once. "Implies" relations let a FastAPI posting count as Python
+  evidence without folding the user's own FastAPI keyword into Python;
+- TF-IDF cosine (0.30): between the query document (titles, skills, description, resume) and the job text,
+  using unigrams and bigrams with sublinear tf. Cosine ≥ 0.35 counts as 1.0. The fixed saturation keeps a score
+  meaningful across searches, unlike normalising by the batch maximum.
+
+A seniority outside the user's preference multiplies role by 0.8. An item is hidden when role < 0.15, or when
+titles or skills were given but there is neither a ≥ 50% title match nor a single skill match. Without that
+rule, strong intent, a matching city and a recent date could lift an unrelated vacancy to about 60 points.
+
+**Intent**: explicit vacancy 1.0, hiring-manager post 0.95, recruiter post 0.85, general recruitment 0.7,
+weak signal 0.3. Unrelated content and job-seeker posts are removed. Records from ATS boards and job APIs are
+explicit vacancies by construction.
+
+**Geography**: selected city 1.0; city inside a fully selected country 1.0; same country but another city 0.6;
+remote roles 0.9 if open to the GCC, 0.8 if worldwide, 0.5 if eligibility is unclear; no stated location 0.3.
+Known locations outside the selection, and work modes the user did not select, are removed.
+
+**Recency**: `1 − age / window`. Items without a trustworthy date get 0 and keep `published_at = null`.
+Users can exclude them. Dates are labelled `exact` (from the source's publish field), `reported` (Lever's
+creation time, or a date the user typed), or `unknown`.
+
+These weights are heuristics chosen to make the ranking readable. They have not been validated against labelled
+data, and the UI and the Excel report both say so.
+
+## Deduplication
+
+Items are processed in score order. An item merges into an earlier one when any of these hold:
+
+1. both have the same source URL;
+2. same company (normalised), same set of core title words and same city;
+3. same company and TF-IDF cosine ≥ 0.9 between their texts.
+
+The kept item lists the merged copies in `duplicates`.
+
+## Sources
+
+| Source | Live | Auth | Coverage | Rate limits | Terms | Notes |
+|---|---|---|---|---|---|---|
+| Greenhouse board API | yes | none | companies you add | not published; one request per board per search, cached 15 min | link to the original posting | `first_published` is the exact publish date |
+| Lever postings API | yes | none | companies you add | as above | as above | only `createdAt`, labelled "reported" |
+| Ashby job-board API | yes | none | companies you add | as above | as above | `publishedAt` exact |
+| Remotive | yes | none | remote roles worldwide | not published; ≤ 2 requests per search, cached | must link back and credit Remotive; 24 h delay; no resubmission to other job boards | remote only |
+| Manual import | yes | none | whatever the user imports | none | user copies only what they may keep | URLs never fetched |
+| Demo | no | — | fictional GCC dataset | — | synthetic | `mode="demo"` only |
+| LinkedIn | no | partner approval | — | — | User Agreement prohibits scraping | research mode instead |
+
+Verified GCC boards (October 2026): Careem and Tamara on Greenhouse, Ziina on Ashby.
+
+## Frontend (`frontend/src`)
+
+- `App.tsx`: mode switch, tabs, search and export flow.
+- `lib/useBackend.ts`: cold-start tracking. It pings `/health` when the page loads. A request still pending after
+  2.5 s switches the notice to "waking". Any HTTP answer, including a 4xx, proves the backend is awake. Network
+  errors, timeouts and proxy 502/503/504 count as "unreachable". The "We're awake!" message appears only after a
+  slow start that ended in a real response, and at most once per browser session.
+- `lib/linkedin.ts`: research-mode URL builder.
+- `lib/safe.ts`: `safeHref` (http/https only), CSV formula escaping.
+- `lib/storage.ts`: guarded localStorage. The app still works when storage is blocked.
+- `public/demo-snapshot.json`: the demo search run through the real backend engine during the Pages build. It is
+  shown, clearly labelled, when the site has no backend URL or the backend cannot be reached in demo mode.
+
+## Trade-offs
+
+- **No database.** Users keep their own data in the browser. The cost is no cross-device sync.
+- **Rules, not a model, for intent.** Every result can show why it got its label, and the service needs nothing
+  heavier than scikit-learn. The cost is lower recall on unusual phrasing.
+- **User-selected company boards instead of crawling.** Every request goes to an official endpoint the company
+  publishes for this purpose. The cost is that coverage depends on the boards the user adds.
+- **No server-side URL fetching.** This removes the SSRF surface. The cost is that imported posts must include
+  their text.
