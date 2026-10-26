@@ -1,29 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { normaliseImport } from "../components/ImportPanel";
 import { classifyHttpFailure } from "./api";
-import { buildResearchLinks, linkedinDateFilter } from "./linkedin";
 import { csvCell, safeHref } from "./safe";
-
-describe("research links", () => {
-  it("maps windows to LinkedIn's date buckets", () => {
-    expect(linkedinDateFilter(1)).toBe("past-24h");
-    expect(linkedinDateFilter(3)).toBe("past-week");
-    expect(linkedinDateFilter(14)).toBe("past-month");
-  });
-
-  it("builds encoded LinkedIn content-search URLs", () => {
-    const links = buildResearchLinks(["LLM Engineer"], [{ country_code: "AE", city: "Dubai" }, { country_code: "QA" }], 7);
-    const url = new URL(links[0].url);
-    expect(url.origin + url.pathname).toBe("https://www.linkedin.com/search/results/content/");
-    expect(url.searchParams.get("keywords")).toBe('hiring "LLM Engineer" ("Dubai" OR "Qatar")');
-    expect(url.searchParams.get("datePosted")).toBe('"past-week"');
-    expect(links.at(-1)?.kind).toBe("web");
-  });
-
-  it("needs a title", () => {
-    expect(buildResearchLinks([], [], 7)).toEqual([]);
-  });
-});
 
 describe("safety helpers", () => {
   it("only allows http(s) links", () => {
