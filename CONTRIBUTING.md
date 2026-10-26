@@ -35,7 +35,8 @@ npm run build
   `SourceInfo` honestly (auth, coverage, rate limits, terms, reliability), add the host to `ALLOWED_HOSTS` in
   `sources/http.py`, register the adapter in `sources/__init__.py`, and add a test with a stubbed transport. The
   source's terms must allow the use.
-- **New locations** go in `backend/app/geo.py` and `frontend/src/lib/catalog.ts`.
+- **New locations** go in `backend/scripts/locations_source.py`. Regenerate the catalog with
+  `python -m scripts.build_locations` (from `backend/`) and commit `app/data/locations.json`; the frontend reads the same file.
 - Keep the scoring explainable. Every factor that changes a score should add a line to `explanations`.
 - Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:`, `chore:`).
 
