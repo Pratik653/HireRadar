@@ -1,0 +1,524 @@
+{
+ "mode": "demo",
+ "generated_at": "2026-10-26T09:57:43.382733Z",
+ "request": {
+  "mode": "demo",
+  "locations": [
+   {
+    "country_code": "AE",
+    "city": null
+   },
+   {
+    "country_code": "SA",
+    "city": "Riyadh"
+   },
+   {
+    "country_code": "QA",
+    "city": null
+   }
+  ],
+  "work_modes": [
+   "onsite",
+   "hybrid",
+   "remote"
+  ],
+  "titles": [
+   "Applied AI Engineer",
+   "LLM Engineer",
+   "Python Developer"
+  ],
+  "skills": [
+   "Python",
+   "RAG",
+   "LangGraph",
+   "Agentic AI",
+   "LLM"
+  ],
+  "description": "",
+  "resume_text": "",
+  "exclusions": [],
+  "seniority": [],
+  "days": 7,
+  "include_undated": true,
+  "sources": [
+   "remotive",
+   "company_boards",
+   "manual_import"
+  ],
+  "company_boards": [],
+  "imports": [],
+  "min_score": 0.0
+ },
+ "results": [
+  {
+   "id": "e32719fc5b1ad967",
+   "title": "Senior Applied AI Engineer",
+   "company": "Falconridge Digital",
+   "country": "United Arab Emirates",
+   "city": "Dubai",
+   "location_raw": "Dubai, UAE (hybrid)",
+   "work_mode": "hybrid",
+   "seniority": "senior",
+   "published_at": "2026-10-26T04:57:43.382905Z",
+   "date_confidence": "exact",
+   "intent": "hiring_manager",
+   "intent_label": "Direct hiring-manager announcement",
+   "score": 94.2,
+   "breakdown": {
+    "role": 0.9,
+    "intent": 0.95,
+    "geography": 1.0,
+    "recency": 0.97
+   },
+   "explanations": [
+    "Role: title overlaps 100% with 'Applied AI Engineer'",
+    "Skills: 5/5 matched (python, rag, langgraph, agentic ai, llm)",
+    "Text similarity to your target profile: 67%",
+    "Intent: Direct hiring-manager announcement — first-person hiring phrase \"My team is hiring\"",
+    "Location: Dubai is in United Arab Emirates, which you selected",
+    "Recency: published 4 hours ago (window 7d)"
+   ],
+   "matched_skills": [
+    "python",
+    "rag",
+    "langgraph",
+    "agentic ai",
+    "llm"
+   ],
+   "source": "demo",
+   "source_label": "Demo · LinkedIn post",
+   "source_url": "https://example.org/hireradar-demo/d01",
+   "contact": {
+    "name": "Rania Saeed",
+    "position": "Head of AI Engineering",
+    "profile_url": null,
+    "provenance": "synthetic"
+   },
+   "snippet": "…ows with LangGraph for our customer-support platform. Requirements: 5+ years of Python, production LLM experience, vector search, evaluation of retrieval quality. Hybrid, 3 days in our DIFC office. DM me or apply via the link.",
+   "is_demo": true,
+   "duplicates": []
+  },
+  {
+   "id": "aebdfc758733f209",
+   "title": "LLM Engineer",
+   "company": "Saffron Grid",
+   "country": "United Arab Emirates",
+   "city": "Abu Dhabi",
+   "location_raw": "Abu Dhabi, United Arab Emirates",
+   "work_mode": "onsite",
+   "seniority": null,
+   "published_at": "2026-10-25T03:57:43.382905Z",
+   "date_confidence": "exact",
+   "intent": "explicit_vacancy",
+   "intent_label": "Explicit vacancy",
+   "score": 89.8,
+   "breakdown": {
+    "role": 0.79,
+    "intent": 1.0,
+    "geography": 1.0,
+    "recency": 0.821
+   },
+   "explanations": [
+    "Role: title overlaps 100% with 'LLM Engineer'",
+    "Skills: 3/5 matched (python, rag, llm)",
+    "Text similarity to your target profile: 77%",
+    "Intent: Explicit vacancy — published as a job listing by the source",
+    "Location: Abu Dhabi is in United Arab Emirates, which you selected",
+    "Recency: published 29 hours ago (window 7d)"
+   ],
+   "matched_skills": [
+    "python",
+    "rag",
+    "llm"
+   ],
+   "source": "demo",
+   "source_label": "Demo · Careers page",
+   "source_url": "https://example.org/hireradar-demo/d02",
+   "contact": null,
+   "snippet": "…odel serving, RAG over regulatory documents, MLOps with MLflow. Qualifications: Python, PyTorch, 3+ years in NLP. Full-time, on-site in ADGM.",
+   "is_demo": true,
+   "duplicates": []
+  },
+  {
+   "id": "add3fcf9bc96b75d",
+   "title": "Agentic AI Engineer — remote within GCC",
+   "company": "Harbor & Dune Bank",
+   "country": null,
+   "city": null,
+   "location_raw": "Remote (GCC)",
+   "work_mode": "remote",
+   "seniority": null,
+   "published_at": "2026-10-24T17:57:43.382905Z",
+   "date_confidence": "exact",
+   "intent": "hiring_manager",
+   "intent_label": "Direct hiring-manager announcement",
+   "score": 81.0,
+   "breakdown": {
+    "role": 0.671,
+    "intent": 0.95,
+    "geography": 0.9,
+    "recency": 0.762
+   },
+   "explanations": [
+    "Role: title overlaps 67% with 'Applied AI Engineer'",
+    "Skills: 4/5 matched (python, langgraph, agentic ai, llm)",
+    "Text similarity to your target profile: 53%",
+    "Intent: Direct hiring-manager announcement — first-person hiring phrase \"Our team is hiring\"",
+    "Location: remote role open to the GCC region",
+    "Recency: published 39 hours ago (window 7d)"
+   ],
+   "matched_skills": [
+    "python",
+    "langgraph",
+    "agentic ai",
+    "llm"
+   ],
+   "source": "demo",
+   "source_label": "Demo · LinkedIn post",
+   "source_url": "https://example.org/hireradar-demo/d11",
+   "contact": {
+    "name": "Noura Al-Sabah",
+    "position": "Engineering Manager, AI Platform",
+    "profile_url": null,
+    "provenance": "synthetic"
+   },
+   "snippet": "…s with LangGraph, tool calling and evaluation harnesses for banking operations. Python, LLMs, prompt engineering, 4+ years. Reach out to me directly.",
+   "is_demo": true,
+   "duplicates": []
+  },
+  {
+   "id": "49dfec8ca0483559",
+   "title": "LLM Engineer (date not shown)",
+   "company": "Qamar Mobility",
+   "country": "Saudi Arabia",
+   "city": "Jeddah",
+   "location_raw": "Jeddah, Saudi Arabia",
+   "work_mode": null,
+   "seniority": null,
+   "published_at": null,
+   "date_confidence": "unknown",
+   "intent": "explicit_vacancy",
+   "intent_label": "Explicit vacancy",
+   "score": 74.0,
+   "breakdown": {
+    "role": 0.799,
+    "intent": 1.0,
+    "geography": 0.6,
+    "recency": 0.0
+   },
+   "explanations": [
+    "Role: title overlaps 100% with 'LLM Engineer'",
+    "Skills: 3/5 matched (python, rag, llm)",
+    "Text similarity to your target profile: 80%",
+    "Intent: Explicit vacancy — hiring phrase \"We're looking for\" with vacancy detail \"Full-time\"",
+    "Location: Jeddah, Saudi Arabia: same country, different city",
+    "Recency: publication date unknown; not counted toward recency"
+   ],
+   "matched_skills": [
+    "python",
+    "rag",
+    "llm"
+   ],
+   "source": "demo",
+   "source_label": "Demo · Community forum",
+   "source_url": "https://example.org/hireradar-demo/d15",
+   "contact": null,
+   "snippet": "We're looking for an LLM Engineer in Jeddah to build RAG over maintenance logs. Python, LangChain, vector search. Full-time. Requirements: 3+ years.",
+   "is_demo": true,
+   "duplicates": []
+  },
+  {
+   "id": "24bb17d7b0dbdc32",
+   "title": "Python Developer (FastAPI) — client in Riyadh",
+   "company": "Confidential (via recruiter)",
+   "country": "Saudi Arabia",
+   "city": "Riyadh",
+   "location_raw": "Riyadh, Saudi Arabia",
+   "work_mode": null,
+   "seniority": null,
+   "published_at": "2026-10-24T07:57:43.382905Z",
+   "date_confidence": "exact",
+   "intent": "recruiter",
+   "intent_label": "Recruiter hiring announcement",
+   "score": 72.6,
+   "breakdown": {
+    "role": 0.503,
+    "intent": 0.85,
+    "geography": 1.0,
+    "recency": 0.702
+   },
+   "explanations": [
+    "Role: title overlaps 100% with 'Python Developer'",
+    "Skills: 1/5 matched (python)",
+    "Text similarity to your target profile: 28%",
+    "Intent: Recruiter hiring announcement — recruiter signal: I'm recruiting",
+    "Location: Riyadh matches your selection",
+    "Recency: published 2 days ago (window 7d)"
+   ],
+   "matched_skills": [
+    "python"
+   ],
+   "source": "demo",
+   "source_label": "Demo · LinkedIn post",
+   "source_url": "https://example.org/hireradar-demo/d03",
+   "contact": {
+    "name": "Omar Haddad",
+    "position": "Senior Technical Recruiter",
+    "profile_url": null,
+    "provenance": "synthetic"
+   },
+   "snippet": "I'm recruiting on behalf of my client, a fintech scale-up in Riyadh, for a Python Developer. Stack: FastAPI, PostgreSQL, Docker, AWS. 4+ years of experience, relocation package available. Send your CV to apply. Saudi nationals and expats we…",
+   "is_demo": true,
+   "duplicates": []
+  },
+  {
+   "id": "0cba55ce0dd36997",
+   "title": "We're hiring: RAG Developer",
+   "company": "Mirage Robotics Co.",
+   "country": "Qatar",
+   "city": "Doha",
+   "location_raw": "Doha, Qatar",
+   "work_mode": "onsite",
+   "seniority": null,
+   "published_at": "2026-10-25T13:57:43.382905Z",
+   "date_confidence": "exact",
+   "intent": "recruiter",
+   "intent_label": "Recruiter hiring announcement",
+   "score": 69.0,
+   "breakdown": {
+    "role": 0.367,
+    "intent": 0.85,
+    "geography": 1.0,
+    "recency": 0.881
+   },
+   "explanations": [
+    "Role: title overlaps 50% with 'Python Developer'",
+    "Skills: 2/5 matched (python, rag)",
+    "Text similarity to your target profile: 17%",
+    "Intent: Recruiter hiring announcement — recruiter signal: poster's position (Talent Acquisition Partner)",
+    "Location: Doha is in Qatar, which you selected",
+    "Recency: published 19 hours ago (window 7d)"
+   ],
+   "matched_skills": [
+    "python",
+    "rag"
+   ],
+   "source": "demo",
+   "source_label": "Demo · LinkedIn post",
+   "source_url": "https://example.org/hireradar-demo/d04",
+   "contact": {
+    "name": "Fatima Al-Kuwari",
+    "position": "Talent Acquisition Partner",
+    "profile_url": null,
+    "provenance": "synthetic"
+   },
+   "snippet": "We're hiring a RAG Developer in Doha! Join our team building retrieval augmented generation for industrial maintenance manuals. Python, LangChain, vector databases. Apply now — full-time, on-site.",
+   "is_demo": true,
+   "duplicates": []
+  },
+  {
+   "id": "f788fb8f9cb4d716",
+   "title": "Applied Scientist, Generative AI",
+   "company": "Saffron Grid",
+   "country": "Saudi Arabia",
+   "city": "Riyadh",
+   "location_raw": "Riyadh, Saudi Arabia (hybrid)",
+   "work_mode": "hybrid",
+   "seniority": null,
+   "published_at": "2026-10-23T21:57:43.382905Z",
+   "date_confidence": "exact",
+   "intent": "explicit_vacancy",
+   "intent_label": "Explicit vacancy",
+   "score": 68.8,
+   "breakdown": {
+    "role": 0.309,
+    "intent": 1.0,
+    "geography": 1.0,
+    "recency": 0.643
+   },
+   "explanations": [
+    "Role: title overlaps 27% with 'Applied AI Engineer'",
+    "Skills: 2/5 matched (python, llm)",
+    "Text similarity to your target profile: 25%",
+    "Intent: Explicit vacancy — published as a job listing by the source",
+    "Location: Riyadh matches your selection",
+    "Recency: published 2 days ago (window 7d)"
+   ],
+   "matched_skills": [
+    "python",
+    "llm"
+   ],
+   "source": "demo",
+   "source_label": "Demo · Careers page",
+   "source_url": "https://example.org/hireradar-demo/d17",
+   "contact": null,
+   "snippet": "Applied Scientist for generative AI products. Fine-tuning, RLHF, evaluation, Python, PyTorch. 4+ years. Hybrid in Riyadh.",
+   "is_demo": true,
+   "duplicates": []
+  },
+  {
+   "id": "a8620724f56c2275",
+   "title": "Machine Learning Engineer, Search",
+   "company": "Atlas Souk Commerce",
+   "country": "United Arab Emirates",
+   "city": "Dubai",
+   "location_raw": "Dubai, United Arab Emirates",
+   "work_mode": "hybrid",
+   "seniority": null,
+   "published_at": "2026-10-22T05:57:43.382905Z",
+   "date_confidence": "exact",
+   "intent": "explicit_vacancy",
+   "intent_label": "Explicit vacancy",
+   "score": 65.5,
+   "breakdown": {
+    "role": 0.287,
+    "intent": 1.0,
+    "geography": 1.0,
+    "recency": 0.405
+   },
+   "explanations": [
+    "Role: title overlaps 33% with 'Applied AI Engineer'",
+    "Skills: 2/5 matched (python, rag)",
+    "Text similarity to your target profile: 10%",
+    "Intent: Explicit vacancy — published as a job listing by the source",
+    "Location: Dubai is in United Arab Emirates, which you selected",
+    "Recency: published 4 days ago (window 7d)"
+   ],
+   "matched_skills": [
+    "python",
+    "rag"
+   ],
+   "source": "demo",
+   "source_label": "Demo · Careers page",
+   "source_url": "https://example.org/hireradar-demo/d07",
+   "contact": null,
+   "snippet": "Build ranking and retrieval models for product search across the GCC. Python, PyTorch, learning-to-rank, vector search, A/B testing. 3+ years experience. Hybrid in Dubai Internet City.",
+   "is_demo": true,
+   "duplicates": [
+    "https://example.org/hireradar-demo/d08"
+   ]
+  },
+  {
+   "id": "709a2540549d4bc6",
+   "title": "LangGraph contractor needed",
+   "company": "Corniche Studio",
+   "country": null,
+   "city": null,
+   "location_raw": "Remote",
+   "work_mode": "remote",
+   "seniority": null,
+   "published_at": "2026-10-25T15:57:43.382905Z",
+   "date_confidence": "exact",
+   "intent": "hiring_manager",
+   "intent_label": "Direct hiring-manager announcement",
+   "score": 59.8,
+   "breakdown": {
+    "role": 0.309,
+    "intent": 0.95,
+    "geography": 0.5,
+    "recency": 0.893
+   },
+   "explanations": [
+    "Role: title does not match your target titles",
+    "Skills: 3/5 matched (python, langgraph, agentic ai)",
+    "Text similarity to your target profile: 33%",
+    "Intent: Direct hiring-manager announcement — first-person hiring phrase \"I'm hiring\"",
+    "Location: remote role; candidate-location eligibility not verified",
+    "Recency: published 17 hours ago (window 7d)"
+   ],
+   "matched_skills": [
+    "python",
+    "langgraph",
+    "agentic ai"
+   ],
+   "source": "demo",
+   "source_label": "Demo · LinkedIn post",
+   "source_url": "https://example.org/hireradar-demo/d20",
+   "contact": {
+    "name": "Tariq Mehdi",
+    "position": "Founder",
+    "profile_url": null,
+    "provenance": "synthetic"
+   },
+   "snippet": "I'm hiring a contractor who knows LangGraph and agentic AI to help build a multi-agent research assistant. Remote, 3-month contract, Python. DM me with examples of your work.",
+   "is_demo": true,
+   "duplicates": []
+  },
+  {
+   "id": "1999c23913800028",
+   "title": "AI Research Scientist",
+   "company": "Qasr Analytics",
+   "country": "United Arab Emirates",
+   "city": "Abu Dhabi",
+   "location_raw": "Abu Dhabi, UAE",
+   "work_mode": "onsite",
+   "seniority": null,
+   "published_at": "2026-10-20T03:57:43.382905Z",
+   "date_confidence": "exact",
+   "intent": "hiring_manager",
+   "intent_label": "Direct hiring-manager announcement",
+   "score": 59.5,
+   "breakdown": {
+    "role": 0.247,
+    "intent": 0.95,
+    "geography": 1.0,
+    "recency": 0.107
+   },
+   "explanations": [
+    "Role: title overlaps 13% with 'Applied AI Engineer'",
+    "Skills: 2/5 matched (agentic ai, llm)",
+    "Text similarity to your target profile: 20%",
+    "Intent: Direct hiring-manager announcement — first-person hiring phrase \"I'm hiring\"",
+    "Location: Abu Dhabi is in United Arab Emirates, which you selected",
+    "Recency: published 6 days ago (window 7d)"
+   ],
+   "matched_skills": [
+    "agentic ai",
+    "llm"
+   ],
+   "source": "demo",
+   "source_label": "Demo · LinkedIn post",
+   "source_url": "https://example.org/hireradar-demo/d09",
+   "contact": {
+    "name": "Dr. Hessa Al Mansoori",
+    "position": "Director of Research",
+    "profile_url": null,
+    "provenance": "synthetic"
+   },
+   "snippet": "I'm hiring an AI Research Scientist to join my team in Abu Dhabi. Research areas: reasoning in large language models, multi-agent systems, Arabic NLP. PhD or strong publication record (NeurIPS, ICML, ACL). Full-time, on-site at Masdar City.",
+   "is_demo": true,
+   "duplicates": []
+  }
+ ],
+ "summary": {
+  "fetched": 20,
+  "returned": 10,
+  "removed_duplicates": 1,
+  "removed_by_exclusion": 0,
+  "removed_by_location": 4,
+  "removed_by_date": 2,
+  "removed_unrelated": 2,
+  "removed_below_min_score": 0,
+  "removed_low_relevance": 1,
+  "undated": 1
+ },
+ "sources": [
+  {
+   "source": "demo",
+   "label": "Demo dataset (synthetic)",
+   "status": "ok",
+   "live": false,
+   "fetched": 20,
+   "message": null
+  }
+ ],
+ "weights": {
+  "role": 0.4,
+  "intent": 0.3,
+  "geography": 0.2,
+  "recency": 0.1
+ },
+ "notes": [
+  "DEMO MODE: every result below is synthetic. Companies, people and links are fictional."
+ ]
+}
