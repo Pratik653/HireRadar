@@ -40,7 +40,7 @@ jobs:
           VITE_BASE: /HireRadar/
           # Set this repository variable to the Render URL once the API is deployed.
           VITE_API_URL: ${{ vars.VITE_API_URL }}
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v4
         with:
           path: frontend/dist
