@@ -29,7 +29,7 @@ jobs:
         run: |
           pip install -r requirements.txt
           python -m scripts.build_demo_snapshot
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
