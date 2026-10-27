@@ -54,12 +54,31 @@ generates the searches and you run them in your own browser. When you find a pos
 **Import posts**. The adapter interface leaves room for an official LinkedIn integration if partner access
 ever becomes available.
 
+## Research Companion (optional browser extension)
+
+The [Research Companion](extension/README.md) is a small Chrome/Edge extension. It steps through HireRadar's
+LinkedIn research searches from a floating window, so you don't have to switch back to HireRadar after every
+search:
+- *Previous* and *Next* move one reused LinkedIn tab through the prioritized queue.
+- *Try broader* follows HireRadar's relaxation ladder.
+- You mark what each search found, and those marks sync back to HireRadar.
+
+You can move the window, resize it from any edge or corner, minimize it to a bubble, close and reopen it, and
+pin it on top of other windows.
+
+It never injects anything into LinkedIn. LinkedIn's User Agreement prohibits overlaying or modifying its pages,
+so the companion is its own window. It asks only for `storage` and has no access to any website.
+
+Install it from the [companion-v1.0.0 release](https://github.com/Pratik653/HireRadar/releases/tag/companion-v1.0.0)
+with *Load unpacked*; it is not in the Chrome Web Store yet. HireRadar works the same without it.
+
 ## Architecture
 
 ```
 frontend/  React 19 + TypeScript + Vite + Tailwind   → GitHub Pages (static)
 backend/   FastAPI + Pydantic + scikit-learn + openpyxl → Render free web service (stateless)
 tests/     backend tests (pytest); frontend tests live next to the code (vitest)
+extension/ optional Research Companion (Manifest V3, Chrome/Edge), packaged as its own release
 docs/      architecture, deployment, reference audit
 ```
 

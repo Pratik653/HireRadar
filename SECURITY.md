@@ -18,6 +18,16 @@ issue. I aim to reply within a week.
 | Credential exposure | No accounts and no API keys. HireRadar never asks for, stores or forwards LinkedIn passwords, cookies or sessions. |
 | Logging | Request bodies (resume text, imported posts) are not logged. Validation errors return field names and messages, not the submitted values. |
 
+## Research Companion extension
+
+- Its only permission is `storage`. It has no host permissions and no content scripts, so it cannot read or
+  modify any page, LinkedIn included, and has no access to cookies or credentials.
+- `externally_connectable` admits only `https://pratik653.github.io`. The service worker re-checks the sender's
+  origin and accepts four message types. Sessions are schema-validated, and URLs must be LinkedIn post searches
+  whose keywords match the query.
+- Extension pages use a `script-src 'self'` CSP. `node extension/scripts/build.mjs --check` enforces the
+  permission boundary in CI.
+
 ## Data handling
 
 - Preferences, resume text, imported posts and application status stay in the browser's `localStorage`.

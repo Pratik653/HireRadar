@@ -125,6 +125,32 @@ Verified GCC boards (October 2026): Careem and Tamara on Greenhouse, Ziina on As
 - `public/demo-snapshot.json`: the demo search run through the real backend engine during the Pages build. It is
   shown, clearly labelled, when the site has no backend URL or the backend cannot be reached in demo mode.
 
+## Research Companion (extension)
+
+```
+ HireRadar page ──chrome.runtime.sendMessage(ID, msg)──▶ service worker ──tabs.update──▶ one LinkedIn tab
+ (github.io only, via externally_connectable)            │  chrome.storage.local         (URL only; never read)
+                                                         └─windows.create(popup)──▶ companion window ⇄ Keep on top (Document PiP)
+```
+
+- **Session transfer.** `frontend/src/lib/companion.ts` builds the session from the planner's ranked queue:
+  LinkedIn searches only, each with id, strategy, category, label, query, URL, and its broader and narrower
+  candidates from `relaxationCandidates`, so the companion relaxes exactly as the web app does.
+- **Validation.** `extension/src/session.js` validates every session: known fields only, at most 100 searches,
+  URLs restricted to `https://www.linkedin.com/search/results/content/` with matching keywords, and a 30-day
+  expiry. HireRadar's frontend tests run their sessions through the same validator.
+- **Messages.** Four message types are allowed (`ping`, `start`, `state`, `open`); anything else is rejected.
+- **No LinkedIn access.** The extension has `storage` as its only permission and no host permissions or content
+  scripts. Navigation uses `tabs.create` / `tabs.update` on the one tab it opened, which needs no permission and
+  cannot read the page.
+- **Window.** The companion is an extension-owned popup window. The OS provides moving, resizing from any edge
+  or corner, minimizing and closing. The service worker remembers its bounds and clamps them to the visible
+  screen and a 320×420–720×1000 range. Minimize shrinks it to a bubble anchored at the same corner. *Keep on top*
+  moves the UI into a Document Picture-in-Picture window; the popup shrinks instead of minimizing, because
+  browsers close a PiP window whose opener is minimized.
+- **Why not a bubble inside LinkedIn:** LinkedIn's User Agreement §8.2 prohibits overlaying or modifying its
+  pages, and its help centre lists appearance-changing extensions as prohibited.
+
 ## Trade-offs
 
 - **No database.** Users keep their own data in the browser. The cost is no cross-device sync.
