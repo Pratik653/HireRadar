@@ -24,3 +24,6 @@ frontend/dist/
 !tests/fixtures/*.csv
 .DS_Store
 Thumbs.db
+
+# Extension build output (released as a GitHub release asset)
+extension/dist/

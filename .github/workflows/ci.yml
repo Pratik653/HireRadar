@@ -54,3 +54,15 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE: /HireRadar/
+
+  companion:
+    name: Research Companion extension
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: node --test "extension/test/*.test.mjs"
+      - run: node extension/scripts/build.mjs --check
+      - run: node extension/scripts/build.mjs
