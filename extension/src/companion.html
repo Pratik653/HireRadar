@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HireRadar Research Companion</title>
+  <link rel="stylesheet" href="companion.css" />
+  <script type="module" src="companion.js"></script>
+</head>
+<body>
+  <main id="app" aria-live="polite">
+    <!-- Expanded panel -->
+    <section id="panel" hidden>
+      <header class="bar">
+        <img src="../icons/icon32.png" alt="" width="22" height="22" />
+        <div class="brand"><strong>HireRadar</strong><span>Research Companion</span></div>
+        <div class="tools">
+          <button type="button" id="pin" class="icon" title="Keep on top of other windows" aria-label="Keep on top of other windows" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 5 3 3v2h-4v6l-1 1-1-1v-6H7v-2l3-3z"/></svg>
+          </button>
+          <button type="button" id="minimize" class="icon" title="Minimize to a small bubble" aria-label="Minimize to a small bubble">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>
+          </button>
+          <button type="button" id="close" class="icon danger" title="Close the companion (your progress is kept)" aria-label="Close the companion">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="body">
+        <div class="row between">
+          <span id="position" class="position">Search – of –</span>
+          <span id="tally" class="muted small"></span>
+        </div>
+        <div class="meter" aria-hidden="true"><span id="meter"></span></div>
+
+        <div class="badges">
+          <span id="strategy" class="badge"></span>
+          <span id="category" class="badge plain"></span>
+        </div>
+        <p id="label" class="label"></p>
+        <p id="query" class="query" title=""></p>
+
+        <div class="row nav">
+          <button type="button" id="prev" class="btn" aria-label="Previous search" title="Previous search (Alt+←)">‹ Previous</button>
+          <button type="button" id="next" class="btn primary" aria-label="Next search" title="Next search (Alt+→)">Next ›</button>
+        </div>
+        <div class="row">
+          <button type="button" id="broader" class="btn wide">Try broader search</button>
+        </div>
+
+        <label class="field">
+          <span>What did you find?</span>
+          <select id="feedback">
+            <option value="unreviewed">Not reviewed</option>
+            <option value="relevant">Relevant results found</option>
+            <option value="none">No results</option>
+            <option value="irrelevant">Results not relevant</option>
+          </select>
+        </label>
+        <div id="suggest" class="suggest" hidden>
+          <p id="suggestText"></p>
+          <button type="button" id="suggestGo" class="btn small">Open it</button>
+        </div>
+
+        <div class="row foot">
+          <button type="button" id="reopen" class="link">Reopen this search</button>
+          <a id="home" class="link" href="https://pratik653.github.io/HireRadar/" target="_blank" rel="noopener noreferrer">Open HireRadar</a>
+        </div>
+        <p class="muted tiny">HireRadar never reads LinkedIn pages. Mark each search yourself.</p>
+      </div>
+    </section>
+
+    <!-- Minimized bubble -->
+    <button type="button" id="bubble" class="bubble" hidden aria-label="Restore the research companion" title="Restore the research companion">
+      <img src="../icons/icon48.png" alt="" width="40" height="40" />
+      <span id="bubbleCount">–</span>
+    </button>
+
+    <!-- No session -->
+    <section id="empty" class="empty" hidden>
+      <img src="../icons/icon48.png" alt="" width="40" height="40" />
+      <h1>No research session</h1>
+      <p id="emptyReason">Open HireRadar, go to <em>LinkedIn research</em> and choose <em>Enable Research Companion</em>.</p>
+      <a class="btn primary" href="https://pratik653.github.io/HireRadar/" target="_blank" rel="noopener noreferrer">Open HireRadar</a>
+    </section>
+  </main>
+  <!-- Shown in this window while the companion floats on top -->
+  <section id="docked" class="empty" hidden>
+    <img src="../icons/icon32.png" alt="" width="28" height="28" />
+    <p>Floating on top</p>
+    <button type="button" id="dock" class="btn small">Bring it back here</button>
+  </section>
+</body>
+</html>

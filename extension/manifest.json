@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "HireRadar Research Companion",
+  "short_name": "HireRadar",
+  "version": "1.0.0",
+  "description": "Step through your HireRadar LinkedIn research searches from a small floating window, in one reused tab.",
+  "homepage_url": "https://github.com/Pratik653/HireRadar",
+  "minimum_chrome_version": "116",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0aGskIt4ZiC4etFh99xT6k3XM0elq2w1Xs/uwIWPaHgxASJFQwknwV42M2EvLvpbIUmJaATeaNQNFKZsgdzfIEB169An0CGJQ8CZ6CJ6SA6Zhb6iuu0tPPKCvTWoCEPBjvvkaLePjQBSlzBGGrkLSL07dcTTFRZip3v++tnJJX7fL0gLlD4uezhxCMfeLpK0hwe70rt0BFpjQHTAM/cfjUWTp46pwFbf64vWZrDbtPUn8ze5MR9mRGkgLFBJF97SfBo6xxCoXAXmC3l5aCIUYhiUxH2wVHIaCgBUHjbhufAqKul4HCXVvK2ng6Hs9r/e7e7/wcJ73g04dsa2AVf4XQIDAQAB",
+  "permissions": ["storage"],
+  "background": { "service_worker": "src/background.js", "type": "module" },
+  "action": {
+    "default_title": "Open HireRadar Research Companion",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png" }
+  },
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "externally_connectable": { "matches": ["https://pratik653.github.io/*"] },
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'" }
+}
