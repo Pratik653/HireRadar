@@ -1,5 +1,5 @@
 import { ArrowUpRight, Check, Copy, ExternalLink as LinkIcon, RotateCcw, Search, ShieldCheck, SkipForward, Telescope } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CATEGORY_LABELS,
   FEEDBACK_LABEL,
@@ -23,6 +23,7 @@ import {
 } from "../lib/linkedin";
 import { readStored, writeStored } from "../lib/storage";
 import type { Days, LocationSelection } from "../lib/types";
+import { CompanionCard } from "./CompanionCard";
 import { ExternalLink } from "./ui";
 
 interface Props {
@@ -69,7 +70,8 @@ export function ResearchPanel({ titles, skills, locations, days, onImport }: Pro
   const plan = useMemo(() => buildResearchPlan({ titles, skills, locations, days, window: posted }), [titles, skills, locations, days, posted]);
 
   // Feedback is kept per search configuration, in this browser only.
-  const feedbackKey = `research-feedback:${configKey({ titles, skills, locations })}`;
+  const config = configKey({ titles, skills, locations });
+  const feedbackKey = `research-feedback:${config}`;
   const [feedback, setFeedback] = useState<Record<string, Feedback>>(() => readStored(feedbackKey, {}));
   useEffect(() => setFeedback(readStored(feedbackKey, {})), [feedbackKey]);
   const saveFeedback = (next: Record<string, Feedback>) => {
@@ -94,6 +96,20 @@ export function ResearchPanel({ titles, skills, locations, days, onImport }: Pro
   useEffect(() => setVisible(PAGE), [strategy, category, filter, plan]);
 
   const ranked = useMemo(() => rankWithFeedback(plan, feedback), [plan, feedback]);
+
+  // Progress recorded in the Research Companion flows back here.
+  const syncFromCompanion = useCallback(
+    (fromCompanion: Record<string, Feedback>, openedThere: string[]) => {
+      setFeedback((current) => {
+        const merged = { ...current, ...fromCompanion };
+        if (JSON.stringify(merged) === JSON.stringify(current)) return current;
+        writeStored(feedbackKey, merged);
+        return merged;
+      });
+      setOpened((current) => (openedThere.every((id) => current.has(id)) ? current : new Set([...current, ...openedThere])));
+    },
+    [feedbackKey],
+  );
   const rows = useMemo(() => {
     const needle = filter.trim().toLowerCase();
     return ranked.filter(
@@ -195,6 +211,10 @@ export function ResearchPanel({ titles, skills, locations, days, onImport }: Pro
           </p>
         </div>
       </div>
+
+      {plan.length > 0 && (
+        <CompanionCard ranked={ranked} feedback={feedback} configKey={config} posted={posted} onSync={syncFromCompanion} />
+      )}
 
       {plan.length === 0 ? (
         <p className="text-sm text-slate-500">Add at least one job title or skill to generate searches.</p>
