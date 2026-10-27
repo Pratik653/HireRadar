@@ -389,16 +389,24 @@ function interleave(items: Draft[]): Draft[] {
 // ---------------------------------------------------------------------------------
 // Feedback-driven navigation and ordering
 
-function sibling(plan: ResearchQuery[], from: ResearchQuery, direction: 1 | -1, feedback: Record<string, Feedback>) {
+/**
+ * Every wider (or narrower) LinkedIn search for the same role, nearest first:
+ * the next strategy step before the one after it, same category first within a
+ * step. The Research Companion receives these lists so it relaxes exactly as
+ * the web app does.
+ */
+export function relaxationCandidates(plan: ResearchQuery[], from: ResearchQuery, direction: 1 | -1): ResearchQuery[] {
+  const out: ResearchQuery[] = [];
   const step = LADDER.indexOf(from.strategy);
   for (let s = step + direction; s >= 0 && s < LADDER.length; s += direction) {
-    const candidates = plan.filter(
-      (p) => p.strategy === LADDER[s] && p.engine === "linkedin" && p.subject === from.subject && (feedback[p.id] ?? "unreviewed") === "unreviewed",
-    );
-    const sameCategory = candidates.find((p) => p.category === from.category);
-    if (sameCategory ?? candidates[0]) return sameCategory ?? candidates[0];
+    const level = plan.filter((p) => p.strategy === LADDER[s] && p.engine === "linkedin" && p.subject === from.subject);
+    out.push(...level.filter((p) => p.category === from.category), ...level.filter((p) => p.category !== from.category));
   }
-  return null;
+  return out;
+}
+
+function sibling(plan: ResearchQuery[], from: ResearchQuery, direction: 1 | -1, feedback: Record<string, Feedback>) {
+  return relaxationCandidates(plan, from, direction).find((p) => (feedback[p.id] ?? "unreviewed") === "unreviewed") ?? null;
 }
 
 /** The next wider search for the same role that has not been reviewed yet. */
