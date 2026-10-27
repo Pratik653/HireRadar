@@ -2,20 +2,59 @@ import { COUNTRY_BY_CODE, REGION_BY_ID, subdivisionName } from "./locations";
 import type { Days, LocationSelection } from "./types";
 
 // Research mode builds search URLs that the user opens in their own browser.
-// Nothing here contacts LinkedIn or a search engine.
+// Nothing here contacts LinkedIn or a search engine, and HireRadar never learns
+// how many results a search returned; the user tells us through feedback.
 //
-// Query syntax is kept to what LinkedIn documents for search: "quoted phrases"
-// and an upper-case OR inside one pair of parentheses at most
-// (https://www.linkedin.com/help/linkedin/answer/75814). Wildcards, + and - are
-// not used. Each query names at most one place, because long location lists
-// make LinkedIn's keyword matching less precise.
+// Syntax: only what LinkedIn documents for search
+// (https://www.linkedin.com/help/linkedin/answer/75814): "quoted phrases",
+// upper-case OR, and one pair of parentheses at most. No wildcards, + or -.
+//
+// Why queries are short: LinkedIn's post search ANDs every term, and a quoted
+// phrase must appear verbatim. A query that demands an exact hiring phrase, an
+// exact job title and an exact city at once ("my team is hiring" "Business
+// Operations Specialist" "Sharjah") almost never matches. So each query quotes
+// at most one or two phrases, hiring language is an OR group, and the place
+// relaxes from city to country to none as the strategy widens.
 
-// LinkedIn's content search only offers these date buckets.
-export function linkedinDateFilter(days: Days): "past-24h" | "past-week" | "past-month" {
+// ---------------------------------------------------------------------------------
+// Date filter
+
+/** LinkedIn's post search offers these buckets; "any" omits the filter. */
+export type PostedWindow = "past-24h" | "past-week" | "past-month" | "any";
+export const WINDOW_LABEL: Record<PostedWindow, string> = {
+  "past-24h": "Past 24 hours",
+  "past-week": "Past week",
+  "past-month": "Past month",
+  any: "Any time",
+};
+export const WINDOWS: PostedWindow[] = ["past-24h", "past-week", "past-month", "any"];
+
+export function linkedinDateFilter(days: Days): Exclude<PostedWindow, "any"> {
   if (days <= 1) return "past-24h";
   if (days <= 7) return "past-week";
   return "past-month";
 }
+
+export const widerWindow = (w: PostedWindow): PostedWindow | null => WINDOWS[WINDOWS.indexOf(w) + 1] ?? null;
+
+// ---------------------------------------------------------------------------------
+// Types
+
+export type Strategy = "focused" | "balanced" | "broad" | "discovery";
+export const STRATEGY_LABEL: Record<Strategy, string> = {
+  focused: "Focused",
+  balanced: "Balanced",
+  broad: "Broad",
+  discovery: "Discovery",
+};
+export const STRATEGY_HINT: Record<Strategy, string> = {
+  focused: "Exact title, hiring language and your city",
+  balanced: "Shorter title and country-level location",
+  broad: "Role family and hiring language, no location keyword",
+  discovery: "Related titles, skills and indirect hiring language",
+};
+/** Narrow → wide. "Try broader" moves right, "more focused" moves left. */
+export const LADDER: Strategy[] = ["focused", "balanced", "broad", "discovery"];
 
 export type ResearchCategory =
   | "direct"
@@ -23,10 +62,9 @@ export type ResearchCategory =
   | "manager"
   | "referral"
   | "urgent"
-  | "startup"
   | "expansion"
-  | "tech"
   | "alt_titles"
+  | "tech"
   | "indirect"
   | "web";
 
@@ -36,17 +74,19 @@ export const CATEGORY_LABELS: Record<ResearchCategory, string> = {
   manager: "Hiring managers",
   referral: "Referrals",
   urgent: "Urgent hiring",
-  startup: "Startups & founders",
   expansion: "Team expansion",
-  tech: "Technology",
   alt_titles: "Alternative titles",
+  tech: "Skills",
   indirect: "Indirect signals",
   web: "Web search",
 };
 
 export interface ResearchQuery {
   id: string;
+  strategy: Strategy;
   category: ResearchCategory;
+  /** The user's title (or skill) this query is about; links broader/narrower siblings. */
+  subject: string;
   label: string;
   query: string;
   url: string;
@@ -58,51 +98,92 @@ export interface ResearchInput {
   skills: string[];
   locations: LocationSelection[];
   days: Days;
+  window?: PostedWindow;
 }
 
-// --- vocabulary ---------------------------------------------------------------
+export type Feedback = "relevant" | "none" | "irrelevant" | "unreviewed";
+export const FEEDBACK_LABEL: Record<Feedback, string> = {
+  unreviewed: "Not reviewed",
+  relevant: "Relevant results found",
+  none: "No results",
+  irrelevant: "Results not relevant",
+};
 
-// Related job titles, keyed by a word or phrase found in the user's title.
+// ---------------------------------------------------------------------------------
+// Vocabulary
+
+const SENIORITY = /\b(senior|sr\.?|junior|jr\.?|lead|principal|staff|head of|associate|entry[- ]level|mid[- ]level|graduate|trainee|intern)\b/gi;
+
+// Related job titles, keyed by words in the user's title. Covers business roles
+// as well as technical ones.
 const ROLE_ALTERNATIVES: [RegExp, string[]][] = [
+  [/\boperations?\b|\bops\b/i, ["Operations Coordinator", "Operations Analyst", "Business Operations Associate", "Operations Executive"]],
+  [/\bbusiness analyst\b/i, ["Business Analyst", "Process Analyst", "Operations Analyst"]],
+  [/\bproject manager|program manager\b/i, ["Project Coordinator", "Program Manager", "Delivery Manager"]],
+  [/\bproduct manager\b/i, ["Product Owner", "Technical Product Manager", "Product Lead"]],
+  [/\bsales|business development\b/i, ["Account Executive", "Business Development Manager", "Sales Executive"]],
+  [/\bmarketing\b/i, ["Marketing Executive", "Digital Marketing Specialist", "Growth Marketer"]],
+  [/\b(finance|financial|accountant|accounting)\b/i, ["Financial Analyst", "Accountant", "Finance Executive"]],
+  [/\b(hr|human resources|people|talent)\b/i, ["HR Generalist", "Talent Acquisition Specialist", "HR Business Partner"]],
+  [/\bcustomer (success|support|service)\b/i, ["Customer Success Manager", "Customer Support Specialist", "Client Services Executive"]],
+  [/\bdata analyst\b/i, ["Business Intelligence Analyst", "Reporting Analyst", "Analytics Specialist"]],
   [/\b(llm|large language)\b/i, ["GenAI Engineer", "Generative AI Engineer", "AI Engineer"]],
   [/\b(gen ?ai|generative)\b/i, ["LLM Engineer", "AI Engineer", "Applied AI Engineer"]],
   [/\b(applied ai|ai engineer)\b/i, ["Machine Learning Engineer", "LLM Engineer", "Applied Scientist"]],
   [/\b(machine learning|ml)\b/i, ["ML Engineer", "MLOps Engineer", "Applied Scientist"]],
-  [/\brag\b/i, ["LLM Engineer", "Search Engineer", "AI Engineer"]],
-  [/\b(agent|agentic)\b/i, ["AI Agent Engineer", "LLM Engineer", "AI Engineer"]],
-  [/\bai research|research scientist|research engineer\b/i, ["Research Scientist", "Research Engineer", "Applied Scientist"]],
   [/\bdata scien/i, ["Machine Learning Scientist", "Applied Scientist", "Data Analyst"]],
   [/\bdata engineer/i, ["Analytics Engineer", "Big Data Engineer", "ETL Developer"]],
   [/\bpython\b/i, ["Python Engineer", "Backend Engineer", "Django Developer"]],
-  [/\bbackend|back-end\b/i, ["Backend Developer", "Software Engineer", "API Engineer"]],
+  [/\bback-?end\b/i, ["Backend Developer", "Software Engineer", "API Engineer"]],
   [/\bfront ?end|react\b/i, ["Frontend Developer", "React Developer", "UI Engineer"]],
   [/\bfull ?stack\b/i, ["Full Stack Engineer", "Software Engineer", "Web Developer"]],
   [/\b(devops|sre|platform|cloud)\b/i, ["DevOps Engineer", "Site Reliability Engineer", "Cloud Engineer"]],
   [/\b(qa|test|quality)\b/i, ["QA Engineer", "Test Automation Engineer", "SDET"]],
   [/\bsecurity\b/i, ["Security Engineer", "Cybersecurity Analyst", "Application Security Engineer"]],
-  [/\bproduct manager\b/i, ["Product Owner", "Technical Product Manager", "Product Lead"]],
   [/\b(designer|ux|ui)\b/i, ["Product Designer", "UX Designer", "UI Designer"]],
   [/\bsoftware (engineer|developer)\b/i, ["Software Developer", "Backend Engineer", "Full Stack Engineer"]],
 ];
 
-// Neighbouring technologies, keyed by a skill or a word in a title.
-const RELATED_TECH: [RegExp, string[]][] = [
-  [/\b(llm|gen ?ai|generative|large language)\b/i, ["RAG", "GenAI", "AI agents", "vector database", "enterprise AI"]],
-  [/\brag\b|retrieval/i, ["vector search", "LLM", "embeddings"]],
-  [/\b(langgraph|langchain)\b/i, ["LangChain", "LangGraph", "AI agents"]],
-  [/\b(agent|agentic)\b/i, ["AI agents", "multi-agent", "LangGraph"]],
-  [/\bpython\b/i, ["FastAPI", "Django"]],
-  [/\b(machine learning|ml)\b/i, ["PyTorch", "MLOps"]],
-  [/\bdata engineer|etl|spark\b/i, ["Databricks", "Airflow", "dbt"]],
-  [/\b(react|front ?end)\b/i, ["TypeScript", "Next.js"]],
-  [/\b(devops|cloud|kubernetes)\b/i, ["Kubernetes", "Terraform", "AWS"]],
+// The broad role family used when no exact title is required.
+const ROLE_FAMILY: [RegExp, string][] = [
+  [/\boperations?\b|\bops\b/i, "operations"],
+  [/\b(sales|business development)\b/i, "sales"],
+  [/\bmarketing\b/i, "marketing"],
+  [/\b(finance|financial|accountant|accounting)\b/i, "finance"],
+  [/\b(hr|human resources|talent|recruit)/i, "HR"],
+  [/\bcustomer (success|support|service)\b/i, "customer success"],
+  [/\b(project|program) manager\b/i, "project manager"],
+  [/\bproduct manager\b/i, "product manager"],
+  [/\b(data scien|machine learning|\bml\b|\bai\b|llm|gen ?ai)/i, "AI engineer"],
+  [/\bdata (engineer|analyst)\b/i, "data"],
+  [/\b(designer|ux|ui)\b/i, "designer"],
 ];
 
-// --- helpers ------------------------------------------------------------------
+// Neighbouring skills, keyed by a skill or a word in a title.
+const RELATED_SKILLS: [RegExp, string[]][] = [
+  [/\boperations?\b|\bops\b/i, ["process improvement", "vendor management"]],
+  [/\b(llm|gen ?ai|generative|large language)\b/i, ["RAG", "GenAI", "AI agents", "vector database", "enterprise AI"]],
+  [/\brag\b|retrieval/i, ["vector search", "LLM"]],
+  [/\b(langgraph|langchain|agent|agentic)\b/i, ["AI agents", "LangChain"]],
+  [/\bpython\b/i, ["FastAPI", "Django"]],
+  [/\b(machine learning|ml)\b/i, ["PyTorch", "MLOps"]],
+  [/\bdata engineer|etl|spark\b/i, ["Databricks", "Airflow"]],
+  [/\b(react|front ?end)\b/i, ["TypeScript", "Next.js"]],
+];
+
+// How people actually write the country in hiring posts.
+const COUNTRY_SHORT: Record<string, string> = {
+  AE: "UAE", SA: "Saudi", US: "USA", GB: "UK", KR: "Korea", NL: "Netherlands", HK: "Hong Kong",
+};
+
+// ---------------------------------------------------------------------------------
+// Helpers
 
 const clean = (s: string) => s.replace(/["()]/g, "").replace(/\s+/g, " ").trim();
 const q = (s: string) => `"${clean(s)}"`;
-const join = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).join(" ").trim();
+/** Quote only multi-word terms; single words match as well without quotes. */
+const term = (s: string) => (clean(s).includes(" ") ? q(s) : clean(s));
+const join = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
 const uniq = (items: string[]) => {
   const seen = new Set<string>();
   return items.filter((item) => {
@@ -112,239 +193,249 @@ const uniq = (items: string[]) => {
     return true;
   });
 };
+const expand = (table: [RegExp, string[]][], terms: string[]) =>
+  terms.flatMap((t) => table.filter(([re]) => re.test(t)).flatMap(([, more]) => more));
 
-export function placeNames(locations: LocationSelection[]): string[] {
-  const names = locations
-    .filter((l) => l.region !== "world") // a worldwide search needs no place terms
-    .map((l) =>
-      l.region
-        ? REGION_BY_ID[l.region]?.name
-        : l.city || (l.subdivision && subdivisionName(l.subdivision)) || COUNTRY_BY_CODE[l.country_code ?? ""]?.name,
-    )
-    .filter(Boolean) as string[];
-  return uniq(names);
-}
-
-function expand(table: [RegExp, string[]][], terms: string[]): string[] {
-  return terms.flatMap((term) => table.filter(([re]) => re.test(term)).flatMap(([, more]) => more));
-}
-
-/** Small stable hash for React keys and "opened" tracking. */
-function hash(text: string): string {
+/** Small stable hash for React keys, progress and feedback storage. */
+export function hash(text: string): string {
   let h = 2166136261;
   for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
   return (h >>> 0).toString(36);
 }
 
-export function linkedinUrl(keywords: string, days: Days): string {
-  const params = new URLSearchParams({
-    keywords,
-    datePosted: `"${linkedinDateFilter(days)}"`,
-    sortBy: '"date_posted"',
-  });
-  return `https://www.linkedin.com/search/results/content/?${params.toString()}`;
+/** "Senior Business Operations Specialist" → "Operations Specialist". */
+export function coreTitle(title: string): string {
+  const words = clean(title.replace(SENIORITY, " ")).split(" ").filter(Boolean);
+  return (words.length >= 3 ? words.slice(-2) : words).join(" ") || clean(title);
 }
 
-export function googleUrl(query: string, days: Days): string {
-  const tbs = days <= 1 ? "qdr:d" : days <= 7 ? "qdr:w" : "qdr:m";
-  return `https://www.google.com/search?${new URLSearchParams({ q: query, tbs }).toString()}`;
+export function roleFamily(title: string): string {
+  return ROLE_FAMILY.find(([re]) => re.test(title))?.[1] ?? coreTitle(title);
 }
 
-export function bingUrl(query: string, days: Days): string {
-  // Bing's freshness filter: ez1 = past 24 hours, ez2 = past week, ez3 = past month.
-  const range = days <= 1 ? "ez1" : days <= 7 ? "ez2" : "ez3";
-  return `https://www.bing.com/search?${new URLSearchParams({ q: query, filters: `ex1:"${range}"` }).toString()}`;
+export function alternativeTitles(title: string): string[] {
+  const own = new Set([clean(title).toLowerCase(), coreTitle(title).toLowerCase()]);
+  return uniq(expand(ROLE_ALTERNATIVES, [title])).filter((t) => !own.has(t.toLowerCase()));
 }
 
-// --- planner ------------------------------------------------------------------
-
-type Template = (role: string, place: string, tech: string) => string;
-
-interface Plan {
-  category: Exclude<ResearchCategory, "web">;
-  cap: number;
-  over: "roles" | "alts" | "tech";
-  templates: Template[];
+export function placeNames(locations: LocationSelection[]): string[] {
+  return uniq(locations.filter((l) => l.region !== "world").map((l) => placeLadder(l).focused).filter(Boolean) as string[]);
 }
 
-// Each template is a short keyword query: one or two quoted phrases, a role and
-// one place. Order matters: the earliest templates are the strongest signals.
-const PLANS: Plan[] = [
-  {
-    category: "direct",
-    cap: 7,
-    over: "roles",
-    templates: [
-      (r, p) => join(q("hiring"), q(r), p && q(p)),
-      (r, p) => join(`("we are hiring" OR "we're hiring")`, q(r), p && q(p)),
-      (r, p) => join(q("open position"), q(r), p && q(p)),
-      (r, p) => join(q("now hiring"), q(r), p && q(p)),
-    ],
-  },
-  {
-    category: "recruiter",
-    cap: 5,
-    over: "roles",
-    templates: [
-      (r, p) => join(q("my client"), q(r), p && q(p)),
-      (r, p) => join(q("send your CV"), q(r), p && q(p)),
-      (r, p) => join(q("recruiting for"), q(r), p && q(p)),
-      (r, p) => join(q("share your resume"), q(r), p && q(p)),
-    ],
-  },
-  {
-    category: "manager",
-    cap: 5,
-    over: "roles",
-    templates: [
-      (r, p) => join(q("my team is hiring"), q(r), p && q(p)),
-      (r, p) => join(q("join my team"), q(r), p && q(p)),
-      (r) => join(q("I'm hiring"), q(r)),
-      (r, p) => join(q("hiring for my team"), q(r), p && q(p)),
-    ],
-  },
-  {
-    category: "referral",
-    cap: 4,
-    over: "roles",
-    templates: [
-      (r, p) => join(q("happy to refer"), q(r), p && q(p)),
-      (r) => join(q("referral"), q(r)),
-      (r) => join(q("my company is hiring"), q(r)),
-    ],
-  },
-  {
-    category: "urgent",
-    cap: 4,
-    over: "roles",
-    templates: [
-      (r, p) => join(q("urgent hiring"), q(r), p && q(p)),
-      (r, p) => join(q("immediate joiner"), q(r), p && q(p)),
-      (r, p) => join(q("urgently looking for"), q(r), p && q(p)),
-    ],
-  },
-  {
-    category: "startup",
-    cap: 4,
-    over: "tech",
-    templates: [
-      (_r, p, t) => join(q("founding engineer"), q(t), p && q(p)),
-      (_r, p, t) => join(q("startup hiring"), q(t), p && q(p)),
-      (_r, _p, t) => join(q("first hire"), q(t)),
-    ],
-  },
-  {
-    category: "expansion",
-    cap: 4,
-    over: "roles",
-    templates: [
-      (r, p) => join(q("growing our team"), q(r), p && q(p)),
-      (r, p) => join(q("expanding our team"), q(r), p && q(p)),
-      (r, p) => join(q("new roles"), q(r), p && q(p)),
-    ],
-  },
-  {
-    category: "tech",
-    cap: 8,
-    over: "tech",
-    templates: [
-      (_r, p, t) => join(q("hiring"), q(t), p && q(p)),
-      (_r, p, t) => join(q(`${t} engineer`), q("hiring"), p && q(p)),
-      (_r, _p, t) => join(q("looking for"), q(`${t} experience`)),
-    ],
-  },
-  {
-    category: "alt_titles",
-    cap: 6,
-    over: "alts",
-    templates: [(r, p) => join(q("hiring"), q(r), p && q(p)), (r, p) => join(q("we are hiring"), q(r), p && q(p))],
-  },
-  {
-    category: "indirect",
-    cap: 5,
-    over: "tech",
-    templates: [
-      (_r, p, t) => join(q("join us"), q(t), p && q(p)),
-      (_r, _p, t) => join(q("we're building"), q(t)),
-      (_r, p, t) => join(q("open roles"), q(t), p && q(p)),
-      (_r, _p, t) => join(q("DM me"), q(t)),
-      (_r, _p, t) => join(q("looking for someone"), q(t)),
-    ],
-  },
-];
+/** City → country → region → none, from the existing location taxonomy. */
+export function placeLadder(sel: LocationSelection): { focused: string | null; balanced: string | null } {
+  if (sel.region) {
+    if (sel.region === "world") return { focused: null, balanced: null };
+    const name = REGION_BY_ID[sel.region]?.name ?? null;
+    return { focused: name, balanced: name };
+  }
+  const code = sel.country_code ?? "";
+  const country = COUNTRY_SHORT[code] ?? COUNTRY_BY_CODE[code]?.name ?? null;
+  const focused = sel.city || (sel.subdivision && subdivisionName(sel.subdivision)) || country;
+  return { focused, balanced: country };
+}
 
-const WEB_CAP = 8;
-const MAX_QUERIES = 60;
+// ---------------------------------------------------------------------------------
+// URLs
+
+/** LinkedIn's own search uses %20 for spaces and quoted facet values. */
+export function linkedinUrl(keywords: string, window: PostedWindow): string {
+  const params: string[] = [`keywords=${encodeURIComponent(keywords)}`];
+  if (window !== "any") params.push(`datePosted=${encodeURIComponent(`"${window}"`)}`);
+  params.push(`sortBy=${encodeURIComponent('"date_posted"')}`);
+  return `https://www.linkedin.com/search/results/content/?${params.join("&")}`;
+}
+
+export function googleUrl(query: string, window: PostedWindow): string {
+  const params = new URLSearchParams({ q: query });
+  const tbs = { "past-24h": "qdr:d", "past-week": "qdr:w", "past-month": "qdr:m", any: "" }[window];
+  if (tbs) params.set("tbs", tbs);
+  return `https://www.google.com/search?${params.toString()}`;
+}
+
+export function bingUrl(query: string, window: PostedWindow): string {
+  // Bing freshness: ez1 = past 24 hours, ez2 = past week, ez3 = past month.
+  const params = new URLSearchParams({ q: query });
+  const range = { "past-24h": "ez1", "past-week": "ez2", "past-month": "ez3", any: "" }[window];
+  if (range) params.set("filters", `ex1:"${range}"`);
+  return `https://www.bing.com/search?${params.toString()}`;
+}
+
+// ---------------------------------------------------------------------------------
+// Planner
+
+const HIRING = `(hiring OR "we're hiring" OR "now hiring")`;
+const CAPS: Record<Strategy, number> = { focused: 6, balanced: 10, broad: 5, discovery: 8 };
+const WEB_CAP = 3;
+const ORDER: Strategy[] = ["balanced", "focused", "discovery", "broad"]; // default priority
+
+interface Draft {
+  strategy: Strategy;
+  category: ResearchCategory;
+  subject: string;
+  label: string;
+  query: string;
+}
 
 /**
- * Plan a research session: roughly 30–60 distinct searches across ten post
- * categories plus web-search alternatives. Deterministic: the same input gives
- * the same list in the same order. Categories are interleaved so the first
- * screen already covers every kind of post.
+ * Plan a research session: a small, deduplicated set of searches in four
+ * strategies, ordered Balanced first. Deterministic for the same input.
  */
 export function buildResearchPlan(input: ResearchInput): ResearchQuery[] {
-  const roles = uniq(input.titles.map(clean)).slice(0, 4);
-  const skills = uniq(input.skills.map(clean)).slice(0, 6);
+  const window = input.window ?? linkedinDateFilter(input.days);
+  const roles = uniq(input.titles.map(clean)).slice(0, 3);
+  const skills = uniq(input.skills.map(clean)).slice(0, 5);
   if (!roles.length && !skills.length) return [];
 
-  const lower = new Set(roles.map((r) => r.toLowerCase()));
-  const alts = uniq(expand(ROLE_ALTERNATIVES, roles)).filter((a) => !lower.has(a.toLowerCase())).slice(0, 6);
-  const tech = uniq([...skills, ...expand(RELATED_TECH, [...roles, ...skills])]).slice(0, 10);
-  const places = placeNames(input.locations).slice(0, 8);
-  const placeCycle = places.length ? places : [""];
-  const seen = new Set<string>();
-  let placeTurn = 0;
+  const ladders = input.locations.map(placeLadder);
+  const focusedPlaces = uniq(ladders.map((l) => l.focused).filter(Boolean) as string[]).slice(0, 3);
+  const balancedPlaces = uniq(ladders.map((l) => l.balanced).filter(Boolean) as string[]).slice(0, 2);
+  const at = (list: string[], i: number) => (list.length ? list[i % list.length] : null);
 
-  const make = (category: ResearchCategory, keywords: string, engine: ResearchQuery["engine"], label: string) => {
-    const key = `${engine}:${keywords.toLowerCase()}`;
-    if (seen.has(key) || keywords.length > 140) return null;
-    seen.add(key);
-    const url =
-      engine === "linkedin"
-        ? linkedinUrl(keywords, input.days)
-        : engine === "google"
-          ? googleUrl(keywords, input.days)
-          : bingUrl(keywords, input.days);
-    return { id: hash(key), category, label, query: keywords, url, engine } satisfies ResearchQuery;
-  };
+  const drafts: Draft[] = [];
+  const add = (strategy: Strategy, category: ResearchCategory, subject: string, query: string, place: string | null) =>
+    drafts.push({ strategy, category, subject, query, label: join(subject, place && `· ${place}`) });
 
-  const byCategory: ResearchQuery[][] = PLANS.map((plan) => {
-    const subjects = plan.over === "roles" ? roles : plan.over === "alts" ? alts : tech;
-    const out: ResearchQuery[] = [];
-    // Pair subjects and templates diagonally so each subject meets different
-    // templates, and rotate places so every selected place gets queries while
-    // no single query lists several places.
-    const pairs = plan.templates.length * subjects.length;
-    for (let k = 0; k < pairs && out.length < plan.cap; k++) {
-      const subject = subjects[k % subjects.length];
-      const template = plan.templates[(k + Math.floor(k / subjects.length)) % plan.templates.length];
-      const place = placeCycle[placeTurn++ % placeCycle.length];
-      const keywords = plan.over === "tech" ? template(roles[0] ?? "", place, subject) : template(subject, place, "");
-      const used = keywords.includes(`"${place}"`) ? place : "";
-      const item = make(plan.category, keywords, "linkedin", join(subject, used && `· ${used}`));
-      if (item) out.push(item);
+  roles.forEach((role, i) => {
+    const core = coreTitle(role);
+    const family = roleFamily(role);
+    const city = at(focusedPlaces, i);
+    const country = at(balancedPlaces, i);
+
+    // Focused: the exact title is the only required phrase; hiring words and
+    // the city are plain keywords.
+    add("focused", "direct", role, join(q(role), "hiring", city && term(city)), city);
+    add("focused", "manager", role, join(q(role), `("my team" OR "join my team" OR "I'm hiring")`), null);
+    if (focusedPlaces.length > 1) {
+      const other = at(focusedPlaces, i + 1);
+      add("focused", "recruiter", role, join(q(role), `(recruiting OR "my client")`, other && term(other)), other);
     }
-    return out;
+
+    // Balanced: shorter title, hiring language as an OR group, country level.
+    add("balanced", "direct", role, join(HIRING, q(core), country && term(country)), country);
+    add("balanced", "recruiter", role, join(`(recruiter OR recruiting OR "my client")`, q(core), country && term(country)), country);
+    add("balanced", "manager", role, join(`("my team" OR "join our team" OR "join my team")`, q(core)), null);
+    add("balanced", "urgent", role, join(`(urgent OR urgently OR immediate)`, "hiring", q(core), country && term(country)), country);
+    add("balanced", "referral", role, join(`(referral OR refer)`, "hiring", q(core)), null);
+    add("balanced", "expansion", role, join(`("growing our team" OR "expanding our team" OR "new role")`, q(core)), null);
+
+    // Broad: role family, several hiring signals, no location keyword.
+    // Unquoted words must all appear, but not side by side or in order.
+    add("broad", "direct", role, join(HIRING, core), null);
+    add("broad", "direct", role, join(`(vacancy OR opening OR "open role" OR "open position")`, family), null);
+
+    // Discovery: related titles, then indirect hiring language.
+    alternativeTitles(role).slice(0, 2).forEach((alt, j) => {
+      const place = j === 0 ? country : null;
+      add("discovery", "alt_titles", role, join("hiring", q(alt), place && term(place)), place);
+    });
+    add("discovery", "indirect", role, join(`("join us" OR "we're building" OR "DM me")`, q(core)), null);
   });
 
-  // Public web search for indexed LinkedIn posts: one place per query.
-  const web: ResearchQuery[] = [];
-  const subjects = roles.length ? roles : tech;
-  for (const place of placeCycle) {
-    for (const subject of subjects) {
-      if (web.length >= WEB_CAP) break;
-      const keywords = join("site:linkedin.com/posts", `("hiring" OR "we're hiring")`, q(subject), place && q(place));
-      const engine = web.length % 3 === 2 ? "bing" : "google";
-      const item = make("web", keywords, engine, join(subject, place && `· ${place}`, engine === "bing" ? "(Bing)" : "(Google)"));
-      if (item) web.push(item);
-    }
-  }
-  byCategory.push(web);
+  // Skills: user skills first, then a few neighbours; Discovery strategy.
+  const skillTerms = uniq([...skills, ...expand(RELATED_SKILLS, [...roles, ...skills])]).slice(0, 4);
+  skillTerms.forEach((skill, i) => {
+    const country = at(balancedPlaces, i);
+    add("discovery", "tech", skill, join(HIRING, term(skill), country && term(country)), country);
+  });
 
-  // Interleave: first of each category, then second of each, and so on.
-  const result: ResearchQuery[] = [];
-  for (let i = 0; byCategory.some((list) => i < list.length); i++) {
-    byCategory.forEach((list) => list[i] && result.push(list[i]));
+  // Public web search for indexed LinkedIn posts (Broad).
+  const web: Draft[] = [];
+  (roles.length ? roles : skillTerms).slice(0, WEB_CAP).forEach((subject, i) => {
+    const country = at(balancedPlaces, i);
+    web.push({
+      strategy: "broad",
+      category: "web",
+      subject,
+      query: join("site:linkedin.com/posts", `(hiring OR "we're hiring")`, q(coreTitle(subject)), country && term(country)),
+      label: join(coreTitle(subject), country && `· ${country}`, i % 2 ? "(Bing)" : "(Google)"),
+    });
+  });
+
+  // Deduplicate, cap per strategy, then order: strategy priority, interleaving roles.
+  const seen = new Set<string>();
+  const counts: Record<Strategy, number> = { focused: 0, balanced: 0, broad: 0, discovery: 0 };
+  const kept = drafts.filter((d) => {
+    const key = d.query.toLowerCase();
+    if (seen.has(key) || counts[d.strategy] >= CAPS[d.strategy]) return false;
+    seen.add(key);
+    counts[d.strategy]++;
+    return true;
+  });
+  const ordered = ORDER.flatMap((strategy) => interleave(kept.filter((d) => d.strategy === strategy)));
+
+  const make = (d: Draft, engine: ResearchQuery["engine"]): ResearchQuery => ({
+    ...d,
+    id: hash(`${engine}:${d.query.toLowerCase()}`),
+    engine,
+    url: engine === "linkedin" ? linkedinUrl(d.query, window) : engine === "google" ? googleUrl(d.query, window) : bingUrl(d.query, window),
+  });
+  return [
+    ...ordered.map((d) => make(d, "linkedin")),
+    ...web.map((d, i) => make(d, i % 2 ? "bing" : "google")),
+  ];
+}
+
+/** Round-robin by subject so one role does not fill the top of the list. */
+function interleave(items: Draft[]): Draft[] {
+  const groups = new Map<string, Draft[]>();
+  items.forEach((d) => groups.set(d.subject, [...(groups.get(d.subject) ?? []), d]));
+  const lists = [...groups.values()];
+  const out: Draft[] = [];
+  for (let i = 0; lists.some((l) => i < l.length); i++) lists.forEach((l) => l[i] && out.push(l[i]));
+  return out;
+}
+
+// ---------------------------------------------------------------------------------
+// Feedback-driven navigation and ordering
+
+function sibling(plan: ResearchQuery[], from: ResearchQuery, direction: 1 | -1, feedback: Record<string, Feedback>) {
+  const step = LADDER.indexOf(from.strategy);
+  for (let s = step + direction; s >= 0 && s < LADDER.length; s += direction) {
+    const candidates = plan.filter(
+      (p) => p.strategy === LADDER[s] && p.engine === "linkedin" && p.subject === from.subject && (feedback[p.id] ?? "unreviewed") === "unreviewed",
+    );
+    const sameCategory = candidates.find((p) => p.category === from.category);
+    if (sameCategory ?? candidates[0]) return sameCategory ?? candidates[0];
   }
-  return result.slice(0, MAX_QUERIES);
+  return null;
+}
+
+/** The next wider search for the same role that has not been reviewed yet. */
+export const broaderOf = (plan: ResearchQuery[], from: ResearchQuery, feedback: Record<string, Feedback> = {}) =>
+  sibling(plan, from, 1, feedback);
+
+/** The next narrower search for the same role that has not been reviewed yet. */
+export const narrowerOf = (plan: ResearchQuery[], from: ResearchQuery, feedback: Record<string, Feedback> = {}) =>
+  sibling(plan, from, -1, feedback);
+
+/**
+ * Reorder with the user's feedback: searches already reviewed go last, a role
+ * whose searches came back empty gets its wider searches first, and categories
+ * that produced relevant results move up. Stable otherwise.
+ */
+export function rankWithFeedback(plan: ResearchQuery[], feedback: Record<string, Feedback>): ResearchQuery[] {
+  const empty = new Map<string, number>(); // subject → widest strategy step that came back empty
+  const good = new Set<string>(); // categories with relevant results
+  plan.forEach((p) => {
+    const f = feedback[p.id];
+    if (f === "none") empty.set(p.subject, Math.max(empty.get(p.subject) ?? -1, LADDER.indexOf(p.strategy)));
+    if (f === "relevant") good.add(p.category);
+  });
+  const score = (p: ResearchQuery, index: number) => {
+    const f = feedback[p.id] ?? "unreviewed";
+    let s = index;
+    if (f !== "unreviewed") s += 1000;
+    const emptyStep = empty.get(p.subject);
+    if (emptyStep !== undefined && f === "unreviewed") s += LADDER.indexOf(p.strategy) > emptyStep ? -500 : 200;
+    if (good.has(p.category) && f === "unreviewed") s -= 100;
+    return s;
+  };
+  return plan.map((p, i) => ({ p, s: score(p, i) })).sort((a, b) => a.s - b.s).map((x) => x.p);
+}
+
+/** Feedback is remembered per search configuration (roles, skills, places). */
+export function configKey(input: Pick<ResearchInput, "titles" | "skills" | "locations">): string {
+  const places = input.locations.map((l) => [l.region, l.country_code, l.subdivision, l.city].filter(Boolean).join(":")).sort();
+  return hash(JSON.stringify([input.titles.map((t) => t.toLowerCase()).sort(), input.skills.map((s) => s.toLowerCase()).sort(), places]));
 }
