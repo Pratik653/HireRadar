@@ -22,6 +22,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- LinkedIn research uses four search strategies (Focused, Balanced, Broad, Discovery) instead of ANDing an exact
+  hiring phrase, exact title and exact city in every query. Hiring language is an OR group, titles are shortened
+  ("Business Operations Specialist" → "Operations Specialist") and places relax from city to country to none.
+  The plan is smaller (about 15–30 searches), Balanced first, with role families and related titles for
+  business roles as well as technical ones.
+- Research searches can be marked *Relevant results*, *No results* or *Not relevant*; HireRadar then offers a
+  broader or more focused search and reorders the list. Feedback is stored in the browser per search
+  configuration. A *Posted* control widens the date filter up to *Any time*, and LinkedIn URLs now encode spaces
+  as `%20` like LinkedIn's own links.
 - Geographic matching works at region, country, state and city level with OR semantics, and resolves ambiguous
   place names from context instead of guessing.
 - Remote roles limited to regions outside the selection are now removed instead of being shown as "eligibility
