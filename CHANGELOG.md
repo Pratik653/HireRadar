@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **Research Companion** (optional Chrome/Edge extension, `extension/`, released separately as
+  `companion-v1.0.0`). A small companion window steps through HireRadar's LinkedIn research queue in one reused
+  tab, with Previous/Next, Try broader, feedback with broader/focused suggestions, minimize-to-bubble, close and
+  reopen, remembered size and position, and an optional *Keep on top* floating mode (Document
+  Picture-in-Picture). Progress and feedback sync back to HireRadar. It needs only the `storage` permission and
+  never reads or changes LinkedIn pages. HireRadar gains an *Enable Research Companion* card with connection
+  status and an install guide.
+
 - Worldwide location targeting: Continent → Country → State/Province → City explorer covering 216 countries
   (ISO 3166-1), states and provinces for India, the United States, Canada, Australia and Germany (ISO 3166-2) and
   270+ hub cities, with search, presets (GCC, India, Europe, USA, Canada, Australia, Africa, Worldwide),
